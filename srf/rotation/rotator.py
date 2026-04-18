@@ -23,6 +23,7 @@ class RotationResult:
     was_created: bool = field(default=False)
     dry_run: bool = field(default=False)
     rotation_needed: bool = field(default=False)
+    cleanup_warnings: list[str] = field(default_factory=list)
 
 
 def _vault_name_from_id(keyvault_id: str) -> str:
@@ -131,6 +132,7 @@ class SecretRotator:
                 description=secret_config.keyvault_secret_description,
             )
 
+            cleanup_warnings: list[str] = []
             for old_cred in credentials:
                 if old_cred.key_id and old_cred.key_id != new_cred.key_id:
                     try:
@@ -138,8 +140,11 @@ class SecretRotator:
                             app_id=secret_config.app_id,
                             key_id=str(old_cred.key_id),
                         )
-                    except Exception:
-                        pass  # best-effort cleanup of old credentials
+                    except Exception as exc:
+                        cleanup_warnings.append(
+                            f"Failed to remove old credential {old_cred.key_id}: "
+                            f"{type(exc).__name__}"
+                        )
 
             return RotationResult(
                 name=secret_config.name,
@@ -149,6 +154,7 @@ class SecretRotator:
                 current_expiry=current_expiry,
                 keyvault_name=vault_name,
                 was_created=was_created,
+                cleanup_warnings=cleanup_warnings,
             )
 
         except Exception as exc:

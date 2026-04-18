@@ -186,9 +186,29 @@ def test_rotate_returns_error_result_on_kv_failure():
     assert "KV write failed" in result.error
 
 
-# ---------------------------------------------------------------------------
-# dry-run
-# ---------------------------------------------------------------------------
+def test_rotate_cleanup_failure_recorded_as_warning():
+    """If old credential removal fails, it should be in cleanup_warnings, not error."""
+    new_cred = MagicMock()
+    new_cred.key_id = "k-new"
+    new_cred.secret_text = "v"
+    new_cred.end_date_time = NOW + timedelta(days=365)
+
+    old_cred = _cred(-5)
+    old_cred.key_id = "k-old"
+
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = [old_cred]
+    graph.add_password_credential.return_value = new_cred
+    graph.remove_password_credential.side_effect = RuntimeError("Graph error")
+
+    rotator = _make_rotator(graph, MagicMock())
+    result = rotator.rotate(_make_secret_cfg())
+
+    assert result.rotated is True
+    assert result.error is None
+    assert len(result.cleanup_warnings) == 1
+    assert "k-old" in result.cleanup_warnings[0]
+    assert "RuntimeError" in result.cleanup_warnings[0]
 
 def _make_dry_rotator(graph, kv):
     return SecretRotator(
