@@ -133,7 +133,7 @@ def main() -> int:
         threshold_days=threshold,
         validity_days=validity,
     )
-    ownership_checker = OwnershipChecker(graph_client=graph)
+    ownership_checker = OwnershipChecker(graph_client=graph, master_owners=config.main.master_owners)
     runner = ParallelRunner(rotator=rotator, ownership_checker=ownership_checker, max_workers=args.workers)
     rotation_results, ownership_results = runner.run(config.secrets)
 

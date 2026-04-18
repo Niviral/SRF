@@ -18,18 +18,27 @@ class OwnershipResult:
 
 
 class OwnershipChecker:
-    def __init__(self, graph_client: GraphClient) -> None:
+    def __init__(self, graph_client: GraphClient, master_owners: list[str] | None = None) -> None:
         self._graph = graph_client
+        self._master_owners = master_owners or []
 
     def check_and_update(self, secret_config: SecretConfig) -> OwnershipResult:
-        if not secret_config.required_owners:
+        seen = set()
+        effective_owners = []
+        for uid in self._master_owners + secret_config.required_owners:
+            if uid not in seen:
+                seen.add(uid)
+                effective_owners.append(uid)
+
+        if not effective_owners:
             return OwnershipResult(name=secret_config.name, app_id=secret_config.app_id, checked=False)
+
         try:
             current_owners = self._graph.list_owners(secret_config.app_id)
             current_set = set(current_owners)
             already_present = []
             added = []
-            for user_id in secret_config.required_owners:
+            for user_id in effective_owners:
                 if user_id in current_set:
                     already_present.append(user_id)
                 else:

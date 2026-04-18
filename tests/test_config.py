@@ -128,3 +128,39 @@ def test_default_smtp_port(mail_config):
         to_addresses=["t@e"],
     )
     assert m.smtp_port == 587
+
+
+def test_master_owners_default_empty(tmp_path):
+    cfg_file = tmp_path / "cfg.yaml"
+    cfg_file.write_text(MINIMAL_YAML)
+
+    cfg = load_config(str(cfg_file))
+
+    assert cfg.main.master_owners == []
+
+
+def test_master_owners_from_yaml(tmp_path):
+    yaml_text = textwrap.dedent("""\
+        main:
+          tenant_id: tid
+          master_client_id: cid
+          master_keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/kv
+          master_keyvault_secret_name: sec
+          master_owners:
+            - 00000000-0000-0000-0000-000000000001
+            - 00000000-0000-0000-0000-000000000002
+        secrets:
+          - name: sp1
+            app_id: app-001
+            keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
+            keyvault_secret_name: sp1-secret
+    """)
+    cfg_file = tmp_path / "cfg.yaml"
+    cfg_file.write_text(yaml_text)
+
+    cfg = load_config(str(cfg_file))
+
+    assert cfg.main.master_owners == [
+        "00000000-0000-0000-0000-000000000001",
+        "00000000-0000-0000-0000-000000000002",
+    ]

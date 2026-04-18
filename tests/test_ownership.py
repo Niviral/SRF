@@ -80,3 +80,51 @@ def test_error_returns_error_result():
     assert result.checked is True
     assert result.error is not None
     assert "graph down" in result.error
+
+
+def test_master_owners_applied_to_all():
+    graph = MagicMock(spec=GraphClient)
+    graph.list_owners.return_value = []
+    checker = OwnershipChecker(graph_client=graph, master_owners=["master-u1"])
+
+    result = checker.check_and_update(_cfg(required_owners=[]))
+
+    assert result.checked is True
+    assert result.owners_added == ["master-u1"]
+    graph.add_owner.assert_called_once_with("app-id", "master-u1")
+
+
+def test_master_and_sp_owners_merged():
+    graph = MagicMock(spec=GraphClient)
+    graph.list_owners.return_value = []
+    checker = OwnershipChecker(graph_client=graph, master_owners=["m1"])
+
+    result = checker.check_and_update(_cfg(required_owners=["sp1"]))
+
+    assert result.checked is True
+    assert result.owners_added == ["m1", "sp1"]
+    assert graph.add_owner.call_count == 2
+    graph.add_owner.assert_any_call("app-id", "m1")
+    graph.add_owner.assert_any_call("app-id", "sp1")
+
+
+def test_master_owners_deduplication():
+    graph = MagicMock(spec=GraphClient)
+    graph.list_owners.return_value = []
+    checker = OwnershipChecker(graph_client=graph, master_owners=["u1"])
+
+    result = checker.check_and_update(_cfg(required_owners=["u1", "u2"]))
+
+    assert result.checked is True
+    assert result.owners_added == ["u1", "u2"]
+    assert graph.add_owner.call_count == 2
+
+
+def test_skip_when_both_empty():
+    graph = MagicMock(spec=GraphClient)
+    checker = OwnershipChecker(graph_client=graph, master_owners=[])
+
+    result = checker.check_and_update(_cfg(required_owners=[]))
+
+    assert result.checked is False
+    graph.add_owner.assert_not_called()

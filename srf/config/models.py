@@ -13,6 +13,7 @@ class MainConfig(BaseModel):
     master_keyvault_secret_name: str
     threshold_days: int = Field(default=7)
     validity_days: int = Field(default=365)
+    master_owners: list[str] = Field(default_factory=list)
 
 
 class MailConfig(BaseModel):

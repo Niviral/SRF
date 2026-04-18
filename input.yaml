@@ -7,6 +7,8 @@ main:
   master_keyvault_secret_name: master-sp-client-secret
   threshold_days: 7
   validity_days: 365
+  master_owners:
+    - 00000000-0000-0000-0000-000000000099   # user object ID added to every SP
 
 # Optional: omit this block entirely to skip email reporting
 mail:
