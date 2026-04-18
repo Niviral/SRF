@@ -44,6 +44,8 @@ def _print_summary(results: list[RotationResult]) -> None:
             _fmt(r.new_expiry),
             f"vault={r.keyvault_name}",
         ))
+        for warning in r.cleanup_warnings:
+            print(f"  ⚠ CLEANUP WARNING: {warning}")
     for r in skipped:
         print(col.format(
             r.name[:19], r.app_id,
