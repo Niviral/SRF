@@ -193,7 +193,8 @@ def main() -> int:
         print("Email sent.")
 
     failed_count = sum(1 for r in rotation_results if r.error)
-    return 1 if failed_count > 0 else 0
+    ownership_failed_count = sum(1 for r in ownership_results if r.error)
+    return 1 if (failed_count + ownership_failed_count) > 0 else 0
 
 
 if __name__ == "__main__":
