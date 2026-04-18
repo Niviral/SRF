@@ -83,6 +83,40 @@ def test_missing_required_field_raises(tmp_path):
         load_config(str(cfg_file))
 
 
+def test_threshold_validity_defaults(tmp_path):
+    cfg_file = tmp_path / "cfg.yaml"
+    cfg_file.write_text(MINIMAL_YAML)
+
+    cfg = load_config(str(cfg_file))
+
+    assert cfg.main.threshold_days == 7
+    assert cfg.main.validity_days == 365
+
+
+def test_threshold_validity_explicit(tmp_path):
+    yaml_text = textwrap.dedent("""\
+        main:
+          tenant_id: tid
+          master_client_id: cid
+          master_keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/kv
+          master_keyvault_secret_name: sec
+          threshold_days: 14
+          validity_days: 180
+        secrets:
+          - name: sp1
+            app_id: app-001
+            keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
+            keyvault_secret_name: sp1-secret
+    """)
+    cfg_file = tmp_path / "cfg.yaml"
+    cfg_file.write_text(yaml_text)
+
+    cfg = load_config(str(cfg_file))
+
+    assert cfg.main.threshold_days == 14
+    assert cfg.main.validity_days == 180
+
+
 def test_default_smtp_port(mail_config):
     from srf.config.models import MailConfig
     m = MailConfig(

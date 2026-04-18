@@ -5,6 +5,8 @@ main:
   master_keyvault_id: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.KeyVault/vaults/my-master-kv
   # Name of the secret inside that vault
   master_keyvault_secret_name: master-sp-client-secret
+  threshold_days: 7
+  validity_days: 365
 
 # Optional: omit this block entirely to skip email reporting
 mail:
@@ -24,6 +26,8 @@ secrets:
     keyvault_id: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.KeyVault/vaults/my-secrets-kv
     keyvault_secret_name: slave1-client-secret
     keyvault_secret_description: "Client secret for slave1 SP — managed by SRF rotation tool"
+    required_owners:
+      - 00000000-0000-0000-0000-000000000001   # Azure AD user object ID
 
   - name: slave2
     app_id: 32e99f34-5731-4fa9-95ae-8115360b0701

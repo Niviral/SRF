@@ -100,3 +100,76 @@ def test_remove_password_credential(monkeypatch):
         client.remove_password_credential(APP_ID, KEY_ID)
 
     remove_mock.assert_awaited_once()
+
+
+# ---------------------------------------------------------------------------
+# list_owners
+# ---------------------------------------------------------------------------
+
+def _make_dir_obj(obj_id, odata_type):
+    obj = MagicMock()
+    obj.id = obj_id
+    obj.odata_type = odata_type
+    return obj
+
+
+def _make_owners_result(entries):
+    result = MagicMock()
+    result.value = entries
+    return result
+
+
+def test_list_owners_returns_user_ids():
+    user1 = _make_dir_obj("user-001", "#microsoft.graph.user")
+    user2 = _make_dir_obj("user-002", "#microsoft.graph.user")
+    sp = _make_dir_obj("sp-001", "#microsoft.graph.servicePrincipal")
+
+    with patch("srf.graph.client.GraphServiceClient") as MockGraph:
+        instance = MockGraph.return_value
+        instance.applications.get = AsyncMock(return_value=_make_apps_list([_make_app()]))
+        instance.applications.by_application_id.return_value.owners.get = AsyncMock(
+            return_value=_make_owners_result([user1, user2, sp])
+        )
+
+        client = GraphClient(credential=MagicMock())
+        result = client.list_owners(APP_ID)
+
+    assert result == ["user-001", "user-002"]
+
+
+def test_list_owners_empty():
+    with patch("srf.graph.client.GraphServiceClient") as MockGraph:
+        instance = MockGraph.return_value
+        instance.applications.get = AsyncMock(return_value=_make_apps_list([_make_app()]))
+        instance.applications.by_application_id.return_value.owners.get = AsyncMock(
+            return_value=_make_owners_result([])
+        )
+
+        client = GraphClient(credential=MagicMock())
+        result = client.list_owners(APP_ID)
+
+    assert result == []
+
+
+# ---------------------------------------------------------------------------
+# add_owner
+# ---------------------------------------------------------------------------
+
+def test_add_owner_calls_ref_post():
+    from msgraph.generated.models.reference_create import ReferenceCreate
+
+    user_oid = "user-999"
+
+    with patch("srf.graph.client.GraphServiceClient") as MockGraph:
+        instance = MockGraph.return_value
+        instance.applications.get = AsyncMock(return_value=_make_apps_list([_make_app()]))
+        ref_post_mock = AsyncMock(return_value=None)
+        instance.applications.by_application_id.return_value.owners.ref.post = ref_post_mock
+
+        client = GraphClient(credential=MagicMock())
+        client.add_owner(APP_ID, user_oid)
+
+    ref_post_mock.assert_awaited_once()
+    body = ref_post_mock.call_args[0][0]
+    assert isinstance(body, ReferenceCreate)
+    assert body.odata_id == f"https://graph.microsoft.com/v1.0/directoryObjects/{user_oid}"
