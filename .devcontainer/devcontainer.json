@@ -5,10 +5,11 @@
   "features": {
     "ghcr.io/devcontainers-contrib/features/poetry:2": {
       "version": "2.3.4"
-    }
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
 
-  "postCreateCommand": "poetry install --no-interaction",
+  "postCreateCommand": "poetry install --no-interaction && gh extension install github/gh-copilot",
 
   "customizations": {
     "vscode": {
@@ -17,7 +18,9 @@
         "ms-python.vscode-pylance",
         "ms-python.debugpy",
         "charliermarsh.ruff",
-        "tamasfe.even-better-toml"
+        "tamasfe.even-better-toml",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
       ],
       "settings": {
         "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
