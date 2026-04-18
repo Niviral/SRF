@@ -86,13 +86,41 @@ venv/bin/pip install -r requirements.txt
 
 ## Authentication
 
-The tool uses a **two-step bootstrap**:
+The tool resolves the master SP client secret using the following priority order:
 
-1. `DefaultAzureCredential` reads the master SP's client secret from the configured Key Vault  
-   *(works with Managed Identity, Azure CLI `az login`, environment variables, etc.)*
-2. A `ClientSecretCredential` is created from the retrieved secret for all subsequent Graph and Key Vault calls
+### 1. `SRF_MASTER_CLIENT_SECRET` environment variable *(CI/CD and local dev)*
+
+Set this env var to skip Key Vault entirely. The secret is used directly to create the master SP credential.
+
+```bash
+export SRF_MASTER_CLIENT_SECRET="<master-sp-client-secret>"
+python main.py
+```
+
+**GitHub Actions example:**
+```yaml
+- name: Run SRF
+  env:
+    SRF_MASTER_CLIENT_SECRET: ${{ secrets.MASTER_SP_SECRET }}
+  run: python main.py --dry-run
+```
+
+The secret lives in GitHub/pipeline secrets (encrypted, masked in logs) and is never written to disk or visible in the process list.
+
+### 2. Key Vault bootstrap *(recommended for production)*
+
+If `SRF_MASTER_CLIENT_SECRET` is not set, the tool falls back to the two-step KV bootstrap:
+
+1. `DefaultAzureCredential` authenticates using the host identity  
+   *(Managed Identity, `az login`, `AZURE_CLIENT_ID`/`AZURE_CLIENT_SECRET` env vars, etc.)*
+2. The master SP's client secret is read from the configured Key Vault
+3. A `ClientSecretCredential` is created for all Graph API and target KV calls
 
 The master SP's client secret is **never stored in the YAML file** — only the Key Vault reference is.
+
+### Error on startup
+
+If neither `SRF_MASTER_CLIENT_SECRET` is set nor `master_keyvault_id` + `master_keyvault_secret_name` are provided in the YAML, the tool exits immediately with a clear error message.
 
 ---
 
@@ -103,7 +131,9 @@ main:
   tenant_id: <azure-tenant-id>
   master_client_id: <master-sp-client-id>
 
-  # ARM resource ID of the Key Vault holding the master SP's own client secret
+  # --- Option A: Key Vault bootstrap (recommended for production) ---
+  # ARM resource ID of the Key Vault holding the master SP's own client secret.
+  # Omit both fields if using the SRF_MASTER_CLIENT_SECRET env var instead.
   master_keyvault_id: /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<kv-name>
   master_keyvault_secret_name: master-sp-client-secret
 
@@ -149,8 +179,8 @@ secrets:
 |---|---|---|---|
 | `tenant_id` | ✅ | — | Azure AD tenant ID |
 | `master_client_id` | ✅ | — | Client ID of the master SP |
-| `master_keyvault_id` | ✅ | — | ARM resource ID of the Key Vault holding the master SP secret |
-| `master_keyvault_secret_name` | ✅ | — | Secret name inside that Key Vault |
+| `master_keyvault_id` | | `null` | ARM resource ID of the Key Vault holding the master SP secret (required if `SRF_MASTER_CLIENT_SECRET` is not set) |
+| `master_keyvault_secret_name` | | `null` | Secret name inside that Key Vault (required if `SRF_MASTER_CLIENT_SECRET` is not set) |
 | `threshold_days` | | `7` | Rotate if expiry is within this many days |
 | `validity_days` | | `365` | New secret validity in days |
 | `master_owners` | | `[]` | User object IDs added as owner to every SP |

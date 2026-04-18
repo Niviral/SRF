@@ -31,6 +31,20 @@ secrets:
     keyvault_secret_name: "sp-test-secret"
 """
 
+# YAML without KV fields — relies on SRF_MASTER_CLIENT_SECRET env var
+_NO_KV_YAML = """\
+main:
+  tenant_id: "tenant-abc"
+  master_client_id: "master-app-id"
+  threshold_days: 7
+  validity_days: 365
+secrets:
+  - name: "sp-test"
+    app_id: "app-id-123"
+    keyvault_id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/myvault"
+    keyvault_secret_name: "sp-test-secret"
+"""
+
 # mail block using exact Pydantic field names from MailConfig
 _MAIL_BLOCK = """\
 mail:
@@ -66,6 +80,13 @@ secrets:
 def minimal_yaml(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(_BASE_YAML)
+    return p
+
+
+@pytest.fixture
+def no_kv_yaml(tmp_path):
+    p = tmp_path / "config_no_kv.yaml"
+    p.write_text(_NO_KV_YAML)
     return p
 
 
@@ -215,3 +236,30 @@ def test_dry_run_and_no_mail_combined(yaml_with_mail, mock_azure, monkeypatch):
     assert not mock_azure["add_password_credential"].called
     assert not mock_azure["set_secret"].called
     assert not mock_azure["send_report"].called
+
+
+# ---------------------------------------------------------------------------
+# Tests — SRF_MASTER_CLIENT_SECRET env var auth path
+# ---------------------------------------------------------------------------
+
+def test_env_var_auth_skips_keyvault(no_kv_yaml, mock_azure, monkeypatch):
+    """When SRF_MASTER_CLIENT_SECRET is set, no KV bootstrap is needed."""
+    monkeypatch.setenv("SRF_MASTER_CLIENT_SECRET", "env-secret-value")
+    monkeypatch.setattr(sys, "argv", ["srf", "--config", str(no_kv_yaml), "--dry-run"])
+
+    # KeyVaultClient.get_secret should NOT be called for the master bootstrap
+    # (it may still be called for target KV writes, but in dry-run mode it won't be)
+    main.main()
+    # If we reach here without RuntimeError, env-var auth path worked
+    assert not mock_azure["set_secret"].called
+
+
+def test_no_auth_source_raises_on_startup(tmp_path, monkeypatch, capsys):
+    """No env var AND no KV fields → RuntimeError before any Azure calls."""
+    monkeypatch.delenv("SRF_MASTER_CLIENT_SECRET", raising=False)
+    p = tmp_path / "no_auth.yaml"
+    p.write_text(_NO_KV_YAML)
+    monkeypatch.setattr(sys, "argv", ["srf", "--config", str(p)])
+
+    with pytest.raises((RuntimeError, SystemExit)):
+        main.main()

@@ -57,12 +57,28 @@
           "type": "string"
         },
         "master_keyvault_id": {
-          "title": "Master Keyvault Id",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Master Keyvault Id"
         },
         "master_keyvault_secret_name": {
-          "title": "Master Keyvault Secret Name",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Master Keyvault Secret Name"
         },
         "threshold_days": {
           "default": 7,
@@ -84,9 +100,7 @@
       },
       "required": [
         "tenant_id",
-        "master_client_id",
-        "master_keyvault_id",
-        "master_keyvault_secret_name"
+        "master_client_id"
       ],
       "title": "MainConfig",
       "type": "object"
@@ -166,8 +180,6 @@
     "main",
     "secrets"
   ],
-  "title": "SRF Configuration",
-  "type": "object",
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "description": "Schema for the SRF (Service Principal Secret Rotation Framework) input.yaml configuration file"
+  "title": "AppConfig",
+  "type": "object"
 }
