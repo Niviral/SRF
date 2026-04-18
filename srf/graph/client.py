@@ -29,8 +29,23 @@ class GraphClient:
     # ------------------------------------------------------------------
 
     def _run(self, coro):
-        """Run an async Graph SDK coroutine synchronously."""
-        return asyncio.run(coro)
+        """Run an async Graph SDK coroutine synchronously in a thread-safe way.
+
+        ``asyncio.run()`` is not safe to call concurrently from multiple threads
+        because it modifies the running event loop at the process level.
+        We create an isolated event loop per call and tear it down cleanly,
+        including shutting down async generators and the default executor so
+        that aiohttp connection pools are not leaked across threads.
+        """
+        loop = asyncio.new_event_loop()
+        try:
+            return loop.run_until_complete(coro)
+        finally:
+            try:
+                loop.run_until_complete(loop.shutdown_asyncgens())
+                loop.run_until_complete(loop.shutdown_default_executor())
+            finally:
+                loop.close()
 
     async def _get_object_id(self, app_id: str) -> str:
         """Resolve appId (client ID) to the application's object ID."""
