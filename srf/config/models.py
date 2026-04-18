@@ -11,6 +11,8 @@ class MainConfig(BaseModel):
     master_client_id: str
     master_keyvault_id: str
     master_keyvault_secret_name: str
+    threshold_days: int = Field(default=7)
+    validity_days: int = Field(default=365)
 
 
 class MailConfig(BaseModel):
@@ -29,6 +31,7 @@ class SecretConfig(BaseModel):
     keyvault_id: str
     keyvault_secret_name: str
     keyvault_secret_description: Optional[str] = Field(default=None)
+    required_owners: list[str] = Field(default_factory=list)
 
 
 class AppConfig(BaseModel):
