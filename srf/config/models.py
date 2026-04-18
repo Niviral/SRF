@@ -8,9 +8,9 @@ from pydantic import BaseModel, Field, model_validator
 
 class MainConfig(BaseModel):
     tenant_id: str
-    master_client_id: str
-    master_keyvault_id: str
-    master_keyvault_secret_name: str
+    master_client_id: Optional[str] = Field(default=None)
+    master_keyvault_id: Optional[str] = Field(default=None)
+    master_keyvault_secret_name: Optional[str] = Field(default=None)
     threshold_days: int = Field(default=7, ge=0, le=365)
     validity_days: int = Field(default=365, ge=1, le=730)
     master_owners: list[str] = Field(default_factory=list)
