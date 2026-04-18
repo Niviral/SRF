@@ -20,6 +20,9 @@ class RotationResult:
     new_expiry: Optional[datetime] = field(default=None)
     current_expiry: Optional[datetime] = field(default=None)
     keyvault_name: Optional[str] = field(default=None)
+    was_created: bool = field(default=False)
+    dry_run: bool = field(default=False)
+    rotation_needed: bool = field(default=False)
 
 
 def _vault_name_from_id(keyvault_id: str) -> str:
@@ -35,6 +38,7 @@ class SecretRotator:
         keyvault_client_factory,
         threshold_days: int = 7,
         validity_days: int = 365,
+        dry_run: bool = False,
     ) -> None:
         """
         Args:
@@ -43,11 +47,13 @@ class SecretRotator:
                 returns a ready KeyVaultClient. Allows per-SP vaults.
             threshold_days: Rotate if expiry is within this many days (or already expired).
             validity_days: Validity period for newly created credentials.
+            dry_run: If True, no writes are made; results reflect what would happen.
         """
         self._graph = graph_client
         self._kv_factory = keyvault_client_factory
         self._threshold = timedelta(days=threshold_days)
         self._validity_days = validity_days
+        self._dry_run = dry_run
 
     # ------------------------------------------------------------------
 
@@ -78,13 +84,36 @@ class SecretRotator:
         vault_name = _vault_name_from_id(secret_config.keyvault_id)
         try:
             credentials = self._graph.list_password_credentials(secret_config.app_id)
+            was_created = len(credentials) == 0
             should_rotate, current_expiry = self.needs_rotation(credentials)
 
             if not should_rotate:
+                if self._dry_run:
+                    return RotationResult(
+                        name=secret_config.name,
+                        app_id=secret_config.app_id,
+                        rotated=False,
+                        dry_run=True,
+                        rotation_needed=False,
+                        current_expiry=current_expiry,
+                        keyvault_name=vault_name,
+                    )
                 return RotationResult(
                     name=secret_config.name,
                     app_id=secret_config.app_id,
                     rotated=False,
+                    current_expiry=current_expiry,
+                    keyvault_name=vault_name,
+                )
+
+            if self._dry_run:
+                return RotationResult(
+                    name=secret_config.name,
+                    app_id=secret_config.app_id,
+                    rotated=False,
+                    dry_run=True,
+                    rotation_needed=True,
+                    was_created=was_created,
                     current_expiry=current_expiry,
                     keyvault_name=vault_name,
                 )
@@ -119,6 +148,7 @@ class SecretRotator:
                 new_expiry=new_cred.end_date_time,
                 current_expiry=current_expiry,
                 keyvault_name=vault_name,
+                was_created=was_created,
             )
 
         except Exception as exc:

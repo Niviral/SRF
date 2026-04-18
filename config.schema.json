@@ -1,0 +1,173 @@
+{
+  "$defs": {
+    "MailConfig": {
+      "properties": {
+        "smtp_host": {
+          "title": "Smtp Host",
+          "type": "string"
+        },
+        "smtp_port": {
+          "default": 587,
+          "title": "Smtp Port",
+          "type": "integer"
+        },
+        "smtp_user": {
+          "title": "Smtp User",
+          "type": "string"
+        },
+        "smtp_password_keyvault_id": {
+          "title": "Smtp Password Keyvault Id",
+          "type": "string"
+        },
+        "smtp_password_secret_name": {
+          "title": "Smtp Password Secret Name",
+          "type": "string"
+        },
+        "from_address": {
+          "title": "From Address",
+          "type": "string"
+        },
+        "to_addresses": {
+          "items": {
+            "type": "string"
+          },
+          "title": "To Addresses",
+          "type": "array"
+        }
+      },
+      "required": [
+        "smtp_host",
+        "smtp_user",
+        "smtp_password_keyvault_id",
+        "smtp_password_secret_name",
+        "from_address",
+        "to_addresses"
+      ],
+      "title": "MailConfig",
+      "type": "object"
+    },
+    "MainConfig": {
+      "properties": {
+        "tenant_id": {
+          "title": "Tenant Id",
+          "type": "string"
+        },
+        "master_client_id": {
+          "title": "Master Client Id",
+          "type": "string"
+        },
+        "master_keyvault_id": {
+          "title": "Master Keyvault Id",
+          "type": "string"
+        },
+        "master_keyvault_secret_name": {
+          "title": "Master Keyvault Secret Name",
+          "type": "string"
+        },
+        "threshold_days": {
+          "default": 7,
+          "title": "Threshold Days",
+          "type": "integer"
+        },
+        "validity_days": {
+          "default": 365,
+          "title": "Validity Days",
+          "type": "integer"
+        },
+        "master_owners": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Master Owners",
+          "type": "array"
+        }
+      },
+      "required": [
+        "tenant_id",
+        "master_client_id",
+        "master_keyvault_id",
+        "master_keyvault_secret_name"
+      ],
+      "title": "MainConfig",
+      "type": "object"
+    },
+    "SecretConfig": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "app_id": {
+          "title": "App Id",
+          "type": "string"
+        },
+        "keyvault_id": {
+          "title": "Keyvault Id",
+          "type": "string"
+        },
+        "keyvault_secret_name": {
+          "title": "Keyvault Secret Name",
+          "type": "string"
+        },
+        "keyvault_secret_description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Keyvault Secret Description"
+        },
+        "required_owners": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Owners",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "app_id",
+        "keyvault_id",
+        "keyvault_secret_name"
+      ],
+      "title": "SecretConfig",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "main": {
+      "$ref": "#/$defs/MainConfig"
+    },
+    "mail": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MailConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "secrets": {
+      "items": {
+        "$ref": "#/$defs/SecretConfig"
+      },
+      "title": "Secrets",
+      "type": "array"
+    }
+  },
+  "required": [
+    "main",
+    "secrets"
+  ],
+  "title": "SRF Configuration",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Schema for the SRF (Service Principal Secret Rotation Framework) input.yaml configuration file"
+}
