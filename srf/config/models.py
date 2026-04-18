@@ -9,8 +9,9 @@ from pydantic import BaseModel, Field
 class MainConfig(BaseModel):
     tenant_id: str
     master_client_id: str
-    master_keyvault_id: str
-    master_keyvault_secret_name: str
+    # KV fields are optional — if omitted, set SRF_MASTER_CLIENT_SECRET env var instead
+    master_keyvault_id: Optional[str] = Field(default=None)
+    master_keyvault_secret_name: Optional[str] = Field(default=None)
     threshold_days: int = Field(default=7)
     validity_days: int = Field(default=365)
     master_owners: list[str] = Field(default_factory=list)

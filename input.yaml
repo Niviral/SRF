@@ -1,7 +1,11 @@
 main:
   tenant_id: 2cf6e176-6c82-4633-b048-418c420e79df
   master_client_id: 422e63ed-df23-4bd0-98de-2a20762a7c7d
-  # ARM resource ID of the Key Vault that holds the master SP client secret
+
+  # --- Option A: Key Vault bootstrap (recommended for production) ---
+  # ARM resource ID of the Key Vault that holds the master SP client secret.
+  # Remove these two lines and set SRF_MASTER_CLIENT_SECRET env var instead
+  # for CI/CD pipelines or local development without a Key Vault.
   master_keyvault_id: /subscriptions/6801b1ff-7314-4480-8e4b-42f910440eb8/resourceGroups/master1/providers/Microsoft.KeyVault/vaults/kv-master1
   # Name of the secret inside that vault
   master_keyvault_secret_name: master-sp-client-secret
