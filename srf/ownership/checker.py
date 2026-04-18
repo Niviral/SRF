@@ -68,5 +68,5 @@ class OwnershipChecker:
                 name=secret_config.name,
                 app_id=secret_config.app_id,
                 checked=True,
-                error=str(exc),
+                error=f"{type(exc).__name__}: ownership check failed — check Azure logs for details",
             )

@@ -79,7 +79,7 @@ def test_error_returns_error_result():
 
     assert result.checked is True
     assert result.error is not None
-    assert "graph down" in result.error
+    assert "RuntimeError" in result.error
 
 
 def test_master_owners_applied_to_all():
