@@ -23,6 +23,7 @@ class RotationResult:
     was_created: bool = field(default=False)
     dry_run: bool = field(default=False)
     rotation_needed: bool = field(default=False)
+    cleanup_warnings: list[str] = field(default_factory=list)
 
 
 def _vault_name_from_id(keyvault_id: str) -> str:
@@ -68,7 +69,9 @@ class SecretRotator:
         for cred in credentials:
             expiry = cred.end_date_time
             if expiry is None:
-                continue
+                # A credential with no expiry is treated as requiring rotation:
+                # it cannot be tracked and may have been created without TTL controls.
+                return True, None
             if expiry.tzinfo is None:
                 expiry = expiry.replace(tzinfo=timezone.utc)
             if soonest is None or expiry < soonest:
@@ -131,6 +134,7 @@ class SecretRotator:
                 description=secret_config.keyvault_secret_description,
             )
 
+            cleanup_warnings: list[str] = []
             for old_cred in credentials:
                 if old_cred.key_id and old_cred.key_id != new_cred.key_id:
                     try:
@@ -138,8 +142,11 @@ class SecretRotator:
                             app_id=secret_config.app_id,
                             key_id=str(old_cred.key_id),
                         )
-                    except Exception:
-                        pass  # best-effort cleanup of old credentials
+                    except Exception as exc:
+                        cleanup_warnings.append(
+                            f"Failed to remove old credential {old_cred.key_id}: "
+                            f"{type(exc).__name__}"
+                        )
 
             return RotationResult(
                 name=secret_config.name,
@@ -149,13 +156,17 @@ class SecretRotator:
                 current_expiry=current_expiry,
                 keyvault_name=vault_name,
                 was_created=was_created,
+                cleanup_warnings=cleanup_warnings,
             )
 
         except Exception as exc:
+            # Use only the exception type — never str(exc) for operations that
+            # handle secrets. Azure SDK exceptions can embed request bodies,
+            # tokens, or the new secret value in their message text.
             return RotationResult(
                 name=secret_config.name,
                 app_id=secret_config.app_id,
                 rotated=False,
-                error=str(exc),
+                error=f"{type(exc).__name__}: rotation failed — check Azure logs for details",
                 keyvault_name=vault_name,
             )
