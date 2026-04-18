@@ -128,3 +128,33 @@ def test_skip_when_both_empty():
 
     assert result.checked is False
     graph.add_owner.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# dry-run
+# ---------------------------------------------------------------------------
+
+def test_dry_run_does_not_call_add_owner():
+    graph = MagicMock(spec=GraphClient)
+    graph.list_owners.return_value = ["u1"]
+    checker = OwnershipChecker(graph_client=graph, dry_run=True)
+
+    result = checker.check_and_update(_cfg(required_owners=["u1", "u2"]))
+
+    assert result.checked is True
+    assert result.dry_run is True
+    assert "u2" in result.owners_would_add
+    graph.add_owner.assert_not_called()
+
+
+def test_dry_run_all_present():
+    graph = MagicMock(spec=GraphClient)
+    graph.list_owners.return_value = ["u1", "u2"]
+    checker = OwnershipChecker(graph_client=graph, dry_run=True)
+
+    result = checker.check_and_update(_cfg(required_owners=["u1", "u2"]))
+
+    assert result.checked is True
+    assert result.dry_run is True
+    assert result.owners_would_add == []
+    graph.add_owner.assert_not_called()
