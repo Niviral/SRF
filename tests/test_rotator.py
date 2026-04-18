@@ -67,6 +67,16 @@ def test_needs_rotation_empty_returns_true():
     assert expiry is None
 
 
+def test_needs_rotation_none_expiry_returns_true():
+    """A credential with no expiry date should trigger rotation."""
+    rotator = _make_rotator(MagicMock(), MagicMock())
+    cred = MagicMock()
+    cred.end_date_time = None
+    result, expiry = rotator.needs_rotation([cred])
+    assert result is True
+    assert expiry is None
+
+
 def test_needs_rotation_returns_soonest_expiry():
     rotator = _make_rotator(MagicMock(), MagicMock())
     creds = [_cred(20), _cred(10), _cred(30)]
