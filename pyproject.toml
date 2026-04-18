@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Service Principal Secret Rotation Framework"
 authors = [{ name = "SRF", email = "user@example.com" }]
 readme = "README.md"
-requires-python = "^3.13"
+requires-python = "^3.12"
 dependencies = [
     "azure-identity (>=1.19.0)",
     "azure-keyvault-secrets (>=4.9.0)",
