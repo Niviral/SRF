@@ -131,6 +131,58 @@ def test_default_smtp_port(mail_config):
     assert m.smtp_port == 587
 
 
+def test_validity_days_must_exceed_threshold(tmp_path):
+    yaml_text = textwrap.dedent("""\
+        main:
+          tenant_id: tid
+          master_client_id: cid
+          master_keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/kv
+          master_keyvault_secret_name: sec
+          threshold_days: 30
+          validity_days: 30
+        secrets: []
+    """)
+    cfg_file = tmp_path / "bad.yaml"
+    cfg_file.write_text(yaml_text)
+
+    with pytest.raises(Exception, match="validity_days"):
+        load_config(str(cfg_file))
+
+
+def test_threshold_days_negative_raises(tmp_path):
+    yaml_text = textwrap.dedent("""\
+        main:
+          tenant_id: tid
+          master_client_id: cid
+          master_keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/kv
+          master_keyvault_secret_name: sec
+          threshold_days: -1
+        secrets: []
+    """)
+    cfg_file = tmp_path / "bad.yaml"
+    cfg_file.write_text(yaml_text)
+
+    with pytest.raises(Exception):
+        load_config(str(cfg_file))
+
+
+def test_validity_days_out_of_range_raises(tmp_path):
+    yaml_text = textwrap.dedent("""\
+        main:
+          tenant_id: tid
+          master_client_id: cid
+          master_keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/kv
+          master_keyvault_secret_name: sec
+          validity_days: 731
+        secrets: []
+    """)
+    cfg_file = tmp_path / "bad.yaml"
+    cfg_file.write_text(yaml_text)
+
+    with pytest.raises(Exception):
+        load_config(str(cfg_file))
+
+
 def test_master_owners_default_empty(tmp_path):
     cfg_file = tmp_path / "cfg.yaml"
     cfg_file.write_text(MINIMAL_YAML)
