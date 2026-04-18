@@ -1,0 +1,72 @@
+name: SRF — SP Rotation (OIDC, zero-secrets)
+
+# Recommended for production: no client secret is stored anywhere.
+# GitHub exchanges an OIDC token with Azure AD directly.
+#
+# Prerequisites:
+#   1. In Azure AD, open the master SP app registration.
+#   2. Go to "Certificates & secrets" → "Federated credentials" → Add credential.
+#      - Federated credential scenario: "GitHub Actions deploying Azure resources"
+#      - Organisation: <your-github-org>
+#      - Repository: <your-repo>
+#      - Entity type: Branch / Tag / Environment (match the `subject` below)
+#      - Name: anything descriptive
+#   3. Add the following repository variables (not secrets — these are not sensitive):
+#      AZURE_CLIENT_ID  = the master SP's Application (client) ID
+#      AZURE_TENANT_ID  = your Azure AD tenant ID
+#
+# input.yaml for this mode (master_client_id is optional — AZURE_CLIENT_ID covers it):
+#
+#   main:
+#     tenant_id: <same as AZURE_TENANT_ID above>
+#     threshold_days: 7
+#     validity_days: 365
+#   secrets:
+#     - name: my-sp
+#       app_id: <target SP client ID>
+#       keyvault_id: /subscriptions/.../vaults/my-kv
+#       keyvault_secret_name: my-sp-secret
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # daily at 06:00 UTC
+  workflow_dispatch:       # manual trigger
+
+permissions:
+  id-token: write    # required for OIDC token exchange
+  contents: read
+
+jobs:
+  rotate:
+    name: Rotate SP secrets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true   # SRF uses Graph API + KV, not ARM subscriptions
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: "2.3.4"
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      - name: Run SRF
+        run: poetry run python main.py --config input.yaml
+        # No SRF_MASTER_CLIENT_SECRET needed — azure/login sets AZURE_FEDERATED_TOKEN_FILE
+        # which DefaultAzureCredential uses automatically (WorkloadIdentityCredential).
