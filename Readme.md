@@ -58,6 +58,21 @@ For owner verification (`required_owners` / `master_owners`), the master SP addi
 
 ## Installation
 
+### With Poetry (recommended)
+
+```bash
+# Install dependencies
+poetry install
+
+# Run the tool
+poetry run python main.py
+
+# Run tests
+poetry run pytest tests\ -v
+```
+
+### Without Poetry (plain pip)
+
 ```bash
 python -m venv venv
 # Windows
@@ -168,11 +183,13 @@ secrets:
 ## Usage
 
 ```bash
-# Basic — uses input.yaml in the current directory
-python main.py
+# With Poetry
+poetry run python main.py
+poetry run python main.py --config /path/to/config.yaml --threshold-days 14
 
-# Custom config file
-python main.py --config /path/to/config.yaml
+# With venv directly
+python main.py
+```
 
 # Override rotation threshold and validity for this run
 python main.py --threshold-days 14 --validity-days 180
@@ -239,12 +256,20 @@ Effective owners for a given SP = `master_owners` ∪ `required_owners` (master 
 ### Install dev dependencies
 
 ```bash
-.\venv\Scripts\pip install -r requirements-dev.txt
+# With Poetry (recommended)
+poetry install   # installs main + dev deps
+
+# With pip
+.\venv\Scripts\pip install -r requirements.txt -r requirements-dev.txt
 ```
 
 ### Run tests
 
 ```bash
+# With Poetry
+poetry run pytest tests\ -v
+
+# With pip / venv
 .\venv\Scripts\pytest tests\ -v
 ```
 
