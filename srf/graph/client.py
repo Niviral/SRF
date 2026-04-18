@@ -23,6 +23,7 @@ class GraphClient:
 
     def __init__(self, credential: TokenCredential) -> None:
         self._graph = GraphServiceClient(credential, scopes=_GRAPH_SCOPES)
+        self._object_id_cache: dict[str, str] = {}
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -48,7 +49,10 @@ class GraphClient:
                 loop.close()
 
     async def _get_object_id(self, app_id: str) -> str:
-        """Resolve appId (client ID) to the application's object ID."""
+        """Resolve appId (client ID) to the application's object ID (cached)."""
+        if app_id in self._object_id_cache:
+            return self._object_id_cache[app_id]
+
         from msgraph.generated.applications.applications_request_builder import (
             ApplicationsRequestBuilder,
         )
@@ -63,7 +67,9 @@ class GraphClient:
         apps = result.value if result and result.value else []
         if not apps:
             raise ValueError(f"Application with appId '{app_id}' not found in the directory.")
-        return apps[0].id  # type: ignore[return-value]
+        obj_id: str = apps[0].id  # type: ignore[assignment]
+        self._object_id_cache[app_id] = obj_id
+        return obj_id
 
     # ------------------------------------------------------------------
     # Public API

@@ -173,3 +173,23 @@ def test_add_owner_calls_ref_post():
     body = ref_post_mock.call_args[0][0]
     assert isinstance(body, ReferenceCreate)
     assert body.odata_id == f"https://graph.microsoft.com/v1.0/directoryObjects/{user_oid}"
+
+
+# ---------------------------------------------------------------------------
+# objectId cache
+# ---------------------------------------------------------------------------
+
+def test_object_id_cached_after_first_call():
+    """Second call for the same app_id must not hit the Graph API again."""
+    with patch("srf.graph.client.GraphServiceClient") as MockGraph:
+        instance = MockGraph.return_value
+        app = _make_app()
+        instance.applications.get = AsyncMock(return_value=_make_apps_list([app]))
+        instance.applications.by_application_id.return_value.get = AsyncMock(return_value=app)
+
+        client = GraphClient(credential=MagicMock())
+        client.list_password_credentials(APP_ID)
+        client.list_password_credentials(APP_ID)
+
+    # _get_object_id resolves via applications.get — it should only be called once
+    assert instance.applications.get.call_count == 1
