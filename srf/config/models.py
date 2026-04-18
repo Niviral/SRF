@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Optional
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class MainConfig(BaseModel):
@@ -11,9 +11,18 @@ class MainConfig(BaseModel):
     master_client_id: str
     master_keyvault_id: str
     master_keyvault_secret_name: str
-    threshold_days: int = Field(default=7)
-    validity_days: int = Field(default=365)
+    threshold_days: int = Field(default=7, ge=0, le=365)
+    validity_days: int = Field(default=365, ge=1, le=730)
     master_owners: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _validity_exceeds_threshold(self) -> "MainConfig":
+        if self.validity_days <= self.threshold_days:
+            raise ValueError(
+                f"validity_days ({self.validity_days}) must be greater than "
+                f"threshold_days ({self.threshold_days})"
+            )
+        return self
 
 
 class MailConfig(BaseModel):
