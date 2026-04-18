@@ -99,7 +99,7 @@ def _print_ownership_summary(ownership_results: list[OwnershipResult]) -> None:
     print("=" * len(header))
 
 
-
+def _fmt(dt) -> str:
     if dt is None:
         return "N/A"
     if dt.tzinfo is None:
