@@ -1,0 +1,32 @@
+main:
+  tenant_id: 2cf6e176-6c82-4633-b048-418c420e79df
+  master_client_id: 422e63ed-df23-4bd0-98de-2a20762a7c7d
+  # ARM resource ID of the Key Vault that holds the master SP client secret
+  master_keyvault_id: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.KeyVault/vaults/my-master-kv
+  # Name of the secret inside that vault
+  master_keyvault_secret_name: master-sp-client-secret
+
+# Optional: omit this block entirely to skip email reporting
+mail:
+  smtp_host: smtp.example.com
+  smtp_port: 587
+  smtp_user: rotation-tool@example.com
+  # SMTP password is fetched from Key Vault at runtime — never stored in plain text
+  smtp_password_keyvault_id: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.KeyVault/vaults/my-master-kv
+  smtp_password_secret_name: smtp-password
+  from_address: rotation-tool@example.com
+  to_addresses:
+    - ops-team@example.com
+
+secrets:
+  - name: slave1
+    app_id: 6302d378-080d-4d83-b8eb-f894e6f75250
+    keyvault_id: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.KeyVault/vaults/my-secrets-kv
+    keyvault_secret_name: slave1-client-secret
+    keyvault_secret_description: "Client secret for slave1 SP — managed by SRF rotation tool"
+
+  - name: slave2
+    app_id: 32e99f34-5731-4fa9-95ae-8115360b0701
+    keyvault_id: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.KeyVault/vaults/my-secrets-kv
+    keyvault_secret_name: slave2-client-secret
+    # keyvault_secret_description is optional — omit to leave KV content_type blank
