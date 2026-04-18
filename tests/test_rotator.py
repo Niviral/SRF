@@ -163,7 +163,8 @@ def test_rotate_returns_error_result_on_graph_failure():
     result = rotator.rotate(_make_secret_cfg())
 
     assert result.rotated is False
-    assert "Graph API down" in result.error
+    assert result.error is not None
+    assert "RuntimeError" in result.error
 
 
 def test_rotate_returns_error_result_on_kv_failure():
@@ -183,7 +184,8 @@ def test_rotate_returns_error_result_on_kv_failure():
     result = rotator.rotate(_make_secret_cfg())
 
     assert result.rotated is False
-    assert "KV write failed" in result.error
+    assert result.error is not None
+    assert "RuntimeError" in result.error
 
 
 # ---------------------------------------------------------------------------

@@ -152,10 +152,13 @@ class SecretRotator:
             )
 
         except Exception as exc:
+            # Use only the exception type — never str(exc) for operations that
+            # handle secrets. Azure SDK exceptions can embed request bodies,
+            # tokens, or the new secret value in their message text.
             return RotationResult(
                 name=secret_config.name,
                 app_id=secret_config.app_id,
                 rotated=False,
-                error=str(exc),
+                error=f"{type(exc).__name__}: rotation failed — check Azure logs for details",
                 keyvault_name=vault_name,
             )
