@@ -87,7 +87,7 @@ def test_send_report_sends_to_all_recipients(monkeypatch):
     sent = {}
 
     class FakeSMTP:
-        def __init__(self, host, port): pass
+        def __init__(self, host, port, timeout=None): pass
         def __enter__(self): return self
         def __exit__(self, *a): pass
         def ehlo(self): pass
@@ -110,7 +110,7 @@ def test_send_report_fetches_smtp_password_from_kv(monkeypatch):
     reporter, kv = _make_reporter()
 
     class FakeSMTP:
-        def __init__(self, h, p): pass
+        def __init__(self, h, p, timeout=None): pass
         def __enter__(self): return self
         def __exit__(self, *a): pass
         def ehlo(self): pass
