@@ -180,6 +180,9 @@ def test_validity_days_out_of_range_raises(tmp_path):
 
     with pytest.raises(Exception):
         load_config(str(cfg_file))
+
+
+def test_master_owners_default_empty(tmp_path):
     cfg_file = tmp_path / "cfg.yaml"
     cfg_file.write_text(MINIMAL_YAML)
 
