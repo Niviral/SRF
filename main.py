@@ -185,12 +185,15 @@ def main() -> int:
 
     if not args.no_mail and config.mail:
         print("\nSending email report...")
-        reporter = MailReporter(
-            mail_config=config.mail,
-            keyvault_client_factory=kv_factory,
-        )
-        reporter.send_report(rotation_results)
-        print("Email sent.")
+        try:
+            reporter = MailReporter(
+                mail_config=config.mail,
+                keyvault_client_factory=kv_factory,
+            )
+            reporter.send_report(rotation_results)
+            print("Email sent.")
+        except Exception as exc:
+            print(f"WARNING: email report failed ({type(exc).__name__}) — rotation results above are complete.")
 
     failed_count = sum(1 for r in rotation_results if r.error)
     return 1 if failed_count > 0 else 0

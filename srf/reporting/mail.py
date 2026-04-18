@@ -170,7 +170,7 @@ class MailReporter:
         msg.attach(MIMEText(html, "html"))
 
         password = self._fetch_smtp_password()
-        with smtplib.SMTP(self._cfg.smtp_host, self._cfg.smtp_port) as server:
+        with smtplib.SMTP(self._cfg.smtp_host, self._cfg.smtp_port, timeout=30) as server:
             server.ehlo()
             server.starttls()
             server.login(self._cfg.smtp_user, password)
