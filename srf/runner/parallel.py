@@ -43,7 +43,7 @@ class ParallelRunner:
                                 name=secret.name,
                                 app_id=secret.app_id,
                                 rotated=False,
-                                error=f"Unexpected runner error: {exc}",
+                                error=f"{type(exc).__name__}: unexpected runner error",
                             )
                         )
                 else:
@@ -56,7 +56,7 @@ class ParallelRunner:
                                 name=secret.name,
                                 app_id=secret.app_id,
                                 checked=True,
-                                error=f"Unexpected runner error: {exc}",
+                                error=f"{type(exc).__name__}: unexpected runner error",
                             )
                         )
 

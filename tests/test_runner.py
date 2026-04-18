@@ -65,7 +65,7 @@ def test_runner_continues_after_one_failure():
     failed = [r for r in rotation_results if r.name == "sp2"]
     assert len(failed) == 1
     assert failed[0].rotated is False
-    assert "Unexpected crash" in (failed[0].error or "")
+    assert "RuntimeError" in (failed[0].error or "")
 
 
 def test_runner_respects_max_workers(monkeypatch):
