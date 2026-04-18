@@ -23,17 +23,36 @@ class GraphClient:
 
     def __init__(self, credential: TokenCredential) -> None:
         self._graph = GraphServiceClient(credential, scopes=_GRAPH_SCOPES)
+        self._object_id_cache: dict[str, str] = {}
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
     def _run(self, coro):
-        """Run an async Graph SDK coroutine synchronously."""
-        return asyncio.run(coro)
+        """Run an async Graph SDK coroutine synchronously in a thread-safe way.
+
+        ``asyncio.run()`` is not safe to call concurrently from multiple threads
+        because it modifies the running event loop at the process level.
+        We create an isolated event loop per call and tear it down cleanly,
+        including shutting down async generators and the default executor so
+        that aiohttp connection pools are not leaked across threads.
+        """
+        loop = asyncio.new_event_loop()
+        try:
+            return loop.run_until_complete(coro)
+        finally:
+            try:
+                loop.run_until_complete(loop.shutdown_asyncgens())
+                loop.run_until_complete(loop.shutdown_default_executor())
+            finally:
+                loop.close()
 
     async def _get_object_id(self, app_id: str) -> str:
-        """Resolve appId (client ID) to the application's object ID."""
+        """Resolve appId (client ID) to the application's object ID (cached)."""
+        if app_id in self._object_id_cache:
+            return self._object_id_cache[app_id]
+
         from msgraph.generated.applications.applications_request_builder import (
             ApplicationsRequestBuilder,
         )
@@ -48,7 +67,9 @@ class GraphClient:
         apps = result.value if result and result.value else []
         if not apps:
             raise ValueError(f"Application with appId '{app_id}' not found in the directory.")
-        return apps[0].id  # type: ignore[return-value]
+        obj_id: str = apps[0].id  # type: ignore[assignment]
+        self._object_id_cache[app_id] = obj_id
+        return obj_id
 
     # ------------------------------------------------------------------
     # Public API

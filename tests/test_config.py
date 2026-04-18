@@ -71,9 +71,10 @@ def test_load_full_yaml(tmp_path):
 
 
 def test_missing_required_field_raises(tmp_path):
+    # tenant_id is still required — omitting it must raise a validation error
     bad = textwrap.dedent("""\
         main:
-          tenant_id: tid
+          master_client_id: mid
         secrets: []
     """)
     cfg_file = tmp_path / "bad.yaml"

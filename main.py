@@ -44,6 +44,8 @@ def _print_summary(results: list[RotationResult]) -> None:
             _fmt(r.new_expiry),
             f"vault={r.keyvault_name}",
         ))
+        for warning in r.cleanup_warnings:
+            print(f"  ⚠ CLEANUP WARNING: {warning}")
     for r in skipped:
         print(col.format(
             r.name[:19], r.app_id,
@@ -185,15 +187,19 @@ def main() -> int:
 
     if not args.no_mail and config.mail:
         print("\nSending email report...")
-        reporter = MailReporter(
-            mail_config=config.mail,
-            keyvault_client_factory=kv_factory,
-        )
-        reporter.send_report(rotation_results)
-        print("Email sent.")
+        try:
+            reporter = MailReporter(
+                mail_config=config.mail,
+                keyvault_client_factory=kv_factory,
+            )
+            reporter.send_report(rotation_results)
+            print("Email sent.")
+        except Exception as exc:
+            print(f"WARNING: email report failed ({type(exc).__name__}) — rotation results above are complete.")
 
     failed_count = sum(1 for r in rotation_results if r.error)
-    return 1 if failed_count > 0 else 0
+    ownership_failed_count = sum(1 for r in ownership_results if r.error)
+    return 1 if (failed_count + ownership_failed_count) > 0 else 0
 
 
 if __name__ == "__main__":
