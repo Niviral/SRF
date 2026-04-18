@@ -2,9 +2,7 @@
 name = "srf"
 version = "0.1.0"
 description = "Service Principal Secret Rotation Framework"
-authors = [
-    {name = "SRF",email = "user@example.com"}
-]
+authors = [{ name = "SRF", email = "user@example.com" }]
 readme = "README.md"
 requires-python = "^3.12"
 dependencies = [
@@ -13,7 +11,7 @@ dependencies = [
     "msgraph-sdk (>=1.5.0)",
     "pydantic (>=2.10.0)",
     "pyyaml (>=6.0.2)",
-    "jsonschema (>=4.0.0)"
+    "jsonschema (>=4.0.0)",
 ]
 
 
@@ -22,7 +20,4 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [dependency-groups]
-dev = [
-    "pytest (>=8.3.0)",
-    "pytest-mock (>=3.14.0)"
-]
+dev = ["pytest (>=8.3.0)", "pytest-mock (>=3.14.0)"]
