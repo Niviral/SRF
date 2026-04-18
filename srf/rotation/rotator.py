@@ -68,7 +68,9 @@ class SecretRotator:
         for cred in credentials:
             expiry = cred.end_date_time
             if expiry is None:
-                continue
+                # A credential with no expiry is treated as requiring rotation:
+                # it cannot be tracked and may have been created without TTL controls.
+                return True, None
             if expiry.tzinfo is None:
                 expiry = expiry.replace(tzinfo=timezone.utc)
             if soonest is None or expiry < soonest:
