@@ -1,10 +1,18 @@
 main:
   tenant_id: 2cf6e176-6c82-4633-b048-418c420e79df
-  master_client_id: 422e63ed-df23-4bd0-98de-2a20762a7c7d
-  # ARM resource ID of the Key Vault that holds the master SP client secret
-  master_keyvault_id: /subscriptions/6801b1ff-7314-4480-8e4b-42f910440eb8/resourceGroups/master1/providers/Microsoft.KeyVault/vaults/kv-master1
-  # Name of the secret inside that vault
-  master_keyvault_secret_name: master-sp-client-secret
+
+  # --- Auth Mode 1: OIDC Workload Identity (GitHub Actions, zero secrets) ---
+  # No client secret needed. Use azure/login@v2 in your workflow.
+  # See .github/workflows/srf-run-oidc.yml
+
+  # --- Auth Mode 2: GitHub Secret env var ---
+  # Set SRF_MASTER_CLIENT_SECRET in your workflow env + uncomment:
+  # master_client_id: 422e63ed-df23-4bd0-98de-2a20762a7c7d
+
+  # --- Auth Mode 3: Key Vault bootstrap (managed identity only, NOT for GitHub Actions) ---
+  # master_client_id: 422e63ed-df23-4bd0-98de-2a20762a7c7d
+  # master_keyvault_id: /subscriptions/6801b1ff-7314-4480-8e4b-42f910440eb8/resourceGroups/master1/providers/Microsoft.KeyVault/vaults/kv-master1
+  # master_keyvault_secret_name: master-sp-client-secret
   threshold_days: 7
   validity_days: 365
   # master_owners:
