@@ -184,3 +184,90 @@ def test_rotate_returns_error_result_on_kv_failure():
 
     assert result.rotated is False
     assert "KV write failed" in result.error
+
+
+# ---------------------------------------------------------------------------
+# dry-run
+# ---------------------------------------------------------------------------
+
+def _make_dry_rotator(graph, kv):
+    return SecretRotator(
+        graph_client=graph,
+        keyvault_client_factory=lambda _: kv,
+        dry_run=True,
+    )
+
+
+def test_dry_run_skips_writes_when_rotation_needed():
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = [_cred(-1)]  # expired
+
+    kv = MagicMock()
+    rotator = _make_dry_rotator(graph, kv)
+    result = rotator.rotate(_make_secret_cfg())
+
+    assert result.rotated is False
+    assert result.dry_run is True
+    assert result.rotation_needed is True
+    graph.add_password_credential.assert_not_called()
+    kv.set_secret.assert_not_called()
+
+
+def test_dry_run_skips_when_not_expiring():
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = [_cred(30)]
+
+    rotator = _make_dry_rotator(graph, MagicMock())
+    result = rotator.rotate(_make_secret_cfg())
+
+    assert result.rotated is False
+    assert result.dry_run is True
+    assert result.rotation_needed is False
+
+
+def test_was_created_true_when_no_prior_credentials():
+    new_cred = MagicMock()
+    new_cred.key_id = "key-new"
+    new_cred.secret_text = "s"
+    new_cred.end_date_time = NOW + timedelta(days=365)
+
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = []
+    graph.add_password_credential.return_value = new_cred
+
+    rotator = _make_rotator(graph, MagicMock())
+    result = rotator.rotate(_make_secret_cfg())
+
+    assert result.rotated is True
+    assert result.was_created is True
+
+
+def test_was_created_false_when_credentials_exist():
+    new_cred = MagicMock()
+    new_cred.key_id = "key-new"
+    new_cred.secret_text = "s"
+    new_cred.end_date_time = NOW + timedelta(days=365)
+
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = [_cred(-1)]
+    graph.add_password_credential.return_value = new_cred
+
+    rotator = _make_rotator(graph, MagicMock())
+    result = rotator.rotate(_make_secret_cfg())
+
+    assert result.rotated is True
+    assert result.was_created is False
+
+
+def test_dry_run_was_created_true_no_prior_creds():
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = []
+
+    kv = MagicMock()
+    rotator = _make_dry_rotator(graph, kv)
+    result = rotator.rotate(_make_secret_cfg())
+
+    assert result.dry_run is True
+    assert result.was_created is True
+    graph.add_password_credential.assert_not_called()
+    kv.set_secret.assert_not_called()

@@ -43,5 +43,8 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction
 
-      - name: Run tests
-        run: poetry run pytest tests/ -v -W ignore::DeprecationWarning --tb=short
+      - name: Unit tests
+        run: poetry run pytest tests/ -v -W ignore::DeprecationWarning --tb=short --ignore=tests/test_e2e.py
+
+      - name: E2E tests
+        run: poetry run pytest tests/test_e2e.py -v -W ignore::DeprecationWarning --tb=short

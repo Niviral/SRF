@@ -22,7 +22,8 @@ def _make_kv_factory(credential):
 
 def _print_summary(results: list[RotationResult]) -> None:
     rotated = [r for r in results if r.rotated]
-    skipped = [r for r in results if not r.rotated and r.error is None]
+    skipped = [r for r in results if not r.rotated and r.error is None and not r.dry_run]
+    dry_run_results = [r for r in results if r.dry_run]
     failed = [r for r in results if not r.rotated and r.error is not None]
 
     col = "{:<20} {:<38} {:<26} {:<26} {}"
@@ -50,6 +51,22 @@ def _print_summary(results: list[RotationResult]) -> None:
             _fmt(r.current_expiry),
             "not expiring soon",
         ))
+    for r in dry_run_results:
+        if r.rotation_needed or r.was_created:
+            label = "WOULD CREATE" if r.was_created else "WOULD ROTATE"
+            print(col.format(
+                r.name[:19], r.app_id,
+                f"~ {label}",
+                _fmt(r.current_expiry),
+                f"vault={r.keyvault_name}",
+            ))
+        else:
+            print(col.format(
+                r.name[:19], r.app_id,
+                "– NO CHANGE",
+                _fmt(r.current_expiry),
+                "not expiring soon (dry-run)",
+            ))
     for r in failed:
         print(col.format(
             r.name[:19], r.app_id,
@@ -84,7 +101,12 @@ def _print_ownership_summary(ownership_results: list[OwnershipResult]) -> None:
     for r in skipped:
         print(col.format(r.name[:19], r.app_id, "SKIPPED", "no required_owners configured"))
     for r in checked:
-        if r.error:
+        if r.dry_run:
+            if r.owners_would_add:
+                print(col.format(r.name[:19], r.app_id, "~ WOULD UPDATE", f"would_add={r.owners_would_add}"))
+            else:
+                print(col.format(r.name[:19], r.app_id, "– OK", "owners OK (dry-run)"))
+        elif r.error:
             print(col.format(r.name[:19], r.app_id, "✗ FAILED", (r.error or "")[:60]))
         elif r.owners_added:
             print(col.format(r.name[:19], r.app_id, "✓ UPDATED", f"added={r.owners_added}"))
@@ -114,7 +136,27 @@ def main() -> int:
     parser.add_argument("--workers", type=int, default=5, help="Max parallel workers (default: 5)")
     parser.add_argument("--threshold-days", type=int, default=None, help="Days before expiry to trigger rotation (default: 7)")
     parser.add_argument("--validity-days", type=int, default=None, help="Validity of new secrets in days (default: 365)")
+    parser.add_argument("--dry-run", action="store_true", help="Show what would change without making any writes")
+    parser.add_argument("--no-mail", action="store_true", help="Suppress email report even if mail config is present")
+    parser.add_argument("--validate", action="store_true", help="Validate input YAML against config.schema.json and exit")
     args = parser.parse_args()
+
+    if args.validate:
+        import json
+        import pathlib
+
+        import jsonschema
+        import yaml as _yaml
+        schema_path = pathlib.Path(__file__).parent / "config.schema.json"
+        schema = json.loads(schema_path.read_text())
+        raw = _yaml.safe_load(open(args.config))
+        try:
+            jsonschema.validate(instance=raw, schema=schema)
+            print("✅ Config is valid.")
+        except jsonschema.ValidationError as e:
+            print(f"❌ Validation error: {e.message}")
+            sys.exit(1)
+        sys.exit(0)
 
     config = load_config(args.config)
 
@@ -132,15 +174,16 @@ def main() -> int:
         keyvault_client_factory=kv_factory,
         threshold_days=threshold,
         validity_days=validity,
+        dry_run=args.dry_run,
     )
-    ownership_checker = OwnershipChecker(graph_client=graph, master_owners=config.main.master_owners)
+    ownership_checker = OwnershipChecker(graph_client=graph, master_owners=config.main.master_owners, dry_run=args.dry_run)
     runner = ParallelRunner(rotator=rotator, ownership_checker=ownership_checker, max_workers=args.workers)
     rotation_results, ownership_results = runner.run(config.secrets)
 
     _print_summary(rotation_results)
     _print_ownership_summary(ownership_results)
 
-    if config.mail:
+    if not args.no_mail and config.mail:
         print("\nSending email report...")
         reporter = MailReporter(
             mail_config=config.mail,

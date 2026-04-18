@@ -12,7 +12,8 @@ dependencies = [
     "azure-keyvault-secrets (>=4.9.0)",
     "msgraph-sdk (>=1.5.0)",
     "pydantic (>=2.10.0)",
-    "pyyaml (>=6.0.2)"
+    "pyyaml (>=6.0.2)",
+    "jsonschema (>=4.0.0)"
 ]
 
 

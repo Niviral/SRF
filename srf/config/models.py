@@ -41,6 +41,11 @@ class AppConfig(BaseModel):
     secrets: list[SecretConfig]
 
 
+def generate_schema() -> dict:
+    """Return the JSON Schema for AppConfig (useful for YAML validation and IDE support)."""
+    return AppConfig.model_json_schema()
+
+
 def load_config(path: str) -> AppConfig:
     with open(path, "r", encoding="utf-8") as fh:
         raw = yaml.safe_load(fh)
