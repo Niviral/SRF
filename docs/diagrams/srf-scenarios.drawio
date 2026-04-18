@@ -1,0 +1,771 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-04-18T10:00:00.000Z" version="21.1.2">
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!--  SCENARIO 1: ONE MASTER SP — MANAGES ALL SPs                   -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <diagram id="s1" name="1 — One Master SP">
+    <mxGraphModel dx="1200" dy="760" grid="1" gridSize="10" guides="1" pageWidth="1169" pageHeight="827" math="0" shadow="1">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="s1_title" value="Scenario 1 — Single Master SP (owner of ALL service principals, all projects &amp; environments)"
+          style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=14;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="18" width="1050" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- input.yaml -->
+        <mxCell id="s1_yaml" value="&lt;b&gt;input.yaml&lt;/b&gt;&lt;br&gt;(single config)"
+          style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=12;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="535" y="68" width="120" height="55" as="geometry"/>
+        </mxCell>
+
+        <!-- SRF Tool -->
+        <mxCell id="s1_srf" value="&lt;b&gt;SRF Tool&lt;/b&gt;  (Python CLI)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;"
+          vertex="1" parent="1">
+          <mxGeometry x="420" y="175" width="350" height="55" as="geometry"/>
+        </mxCell>
+
+        <!-- Master Identity box -->
+        <mxCell id="s1_mbox" value="&lt;b&gt;Master Identity&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="50" y="285" width="220" height="165" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_msp" value="&lt;b&gt;Master SP&lt;/b&gt;&lt;br&gt;Owner of ALL SPs"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="62" y="315" width="196" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_mkv" value="Master KeyVault"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="62" y="375" width="196" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- All-SPs boundary -->
+        <mxCell id="s1_allborder" value="All Managed Service Principals — Project A + Project B, all environments"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;dashed=1;verticalAlign=top;fontSize=11;fontStyle=1;opacity=20;"
+          vertex="1" parent="1">
+          <mxGeometry x="310" y="270" width="860" height="200" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-A-Dev -->
+        <mxCell id="s1_sp1" value="&lt;b&gt;SP-A-Dev&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="325" y="298" width="155" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_kv1" value="KV-A-Dev"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="325" y="373" width="155" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-A-Prod -->
+        <mxCell id="s1_sp2" value="&lt;b&gt;SP-A-Prod&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="500" y="298" width="155" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_kv2" value="KV-A-Prod"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="500" y="373" width="155" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-B-Dev -->
+        <mxCell id="s1_sp3" value="&lt;b&gt;SP-B-Dev&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="675" y="298" width="155" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_kv3" value="KV-B-Dev"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="675" y="373" width="155" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-B-Prod -->
+        <mxCell id="s1_sp4" value="&lt;b&gt;SP-B-Prod&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="850" y="298" width="155" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_kv4" value="KV-B-Prod"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="850" y="373" width="155" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- Microsoft Graph API -->
+        <mxCell id="s1_graph" value="Microsoft Graph API"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="420" y="500" width="350" height="38" as="geometry"/>
+        </mxCell>
+
+        <!-- Risk note -->
+        <mxCell id="s1_risk" value="⚠️  Blast radius: compromise of Master SP affects ALL projects and ALL environments"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=2;"
+          vertex="1" parent="1">
+          <mxGeometry x="310" y="500" width="690" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- EDGES -->
+        <mxCell id="s1_e1" value="reads" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s1_yaml" target="s1_srf" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_e2" value="reads master secret" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s1_srf" target="s1_mkv" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_e3" value="auth + API calls" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s1_srf" target="s1_graph" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_e4" value="rotates" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s1_msp" target="s1_sp1" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_e5" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s1_msp" target="s1_sp2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_e6" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s1_msp" target="s1_sp3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_e7" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s1_msp" target="s1_sp4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_e8" value="saves secret" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s1_sp1" target="s1_kv1" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_e9" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s1_sp2" target="s1_kv2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_e10" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s1_sp3" target="s1_kv3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_e11" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s1_sp4" target="s1_kv4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="s1_leg0" value="Legend"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="50" y="500" width="240" height="115" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_l1" value="SRF Tool"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="522" width="100" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_l2" value="Master SP / KV"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="548" width="100" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_l3" value="Managed SP"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="172" y="522" width="108" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_l4" value="Target KeyVault"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="172" y="548" width="108" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_l5" value="Config file"
+          style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="574" width="100" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_l6" value="External API"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="172" y="574" width="108" height="20" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!--  SCENARIO 2: MASTER SP PER PROJECT                             -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <diagram id="s2" name="2 — Master SP per Project">
+    <mxGraphModel dx="1300" dy="800" grid="1" gridSize="10" guides="1" pageWidth="1169" pageHeight="827" math="0" shadow="1">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="s2_title" value="Scenario 2 — Master SP per Project  (separate master per project, all environments share one master)"
+          style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=14;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="18" width="1130" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Note: separate runs -->
+        <mxCell id="s2_runnote" value="ℹ️  Each project runs SRF independently with its own input.yaml  (e.g. separate CI pipelines)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=2;"
+          vertex="1" parent="1">
+          <mxGeometry x="200" y="55" width="860" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- ── PROJECT A ── -->
+        <mxCell id="s2_pA_box" value="&lt;b&gt;Project A&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;verticalAlign=top;fontSize=13;opacity=25;"
+          vertex="1" parent="1">
+          <mxGeometry x="30" y="105" width="560" height="380" as="geometry"/>
+        </mxCell>
+
+        <!-- input-A.yaml -->
+        <mxCell id="s2_yamlA" value="&lt;b&gt;input-A.yaml&lt;/b&gt;"
+          style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=12;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="130" y="125" width="120" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- SRF Tool A -->
+        <mxCell id="s2_srfA" value="&lt;b&gt;SRF Tool&lt;/b&gt;  (Run A)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;"
+          vertex="1" parent="1">
+          <mxGeometry x="80" y="225" width="220" height="48" as="geometry"/>
+        </mxCell>
+
+        <!-- Master A Identity -->
+        <mxCell id="s2_mboxA" value="&lt;b&gt;Master Identity A&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="50" y="315" width="200" height="155" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_mspA" value="&lt;b&gt;Master SP-A&lt;/b&gt;&lt;br&gt;Owner: Project A SPs only"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="345" width="180" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_mkvA" value="Master KV-A"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="405" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-A-Dev + KV -->
+        <mxCell id="s2_sp_adev" value="&lt;b&gt;SP-A-Dev&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="295" y="325" width="145" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_kv_adev" value="KV-A-Dev"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="295" y="398" width="145" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-A-Prod + KV -->
+        <mxCell id="s2_sp_aprd" value="&lt;b&gt;SP-A-Prod&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="455" y="325" width="115" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_kv_aprd" value="KV-A-Prod"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="455" y="398" width="115" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- ── PROJECT B ── -->
+        <mxCell id="s2_pB_box" value="&lt;b&gt;Project B&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;dashed=1;verticalAlign=top;fontSize=13;opacity=25;"
+          vertex="1" parent="1">
+          <mxGeometry x="620" y="105" width="560" height="380" as="geometry"/>
+        </mxCell>
+
+        <!-- input-B.yaml -->
+        <mxCell id="s2_yamlB" value="&lt;b&gt;input-B.yaml&lt;/b&gt;"
+          style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=12;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="720" y="125" width="120" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- SRF Tool B -->
+        <mxCell id="s2_srfB" value="&lt;b&gt;SRF Tool&lt;/b&gt;  (Run B)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;"
+          vertex="1" parent="1">
+          <mxGeometry x="670" y="225" width="220" height="48" as="geometry"/>
+        </mxCell>
+
+        <!-- Master B Identity -->
+        <mxCell id="s2_mboxB" value="&lt;b&gt;Master Identity B&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="640" y="315" width="200" height="155" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_mspB" value="&lt;b&gt;Master SP-B&lt;/b&gt;&lt;br&gt;Owner: Project B SPs only"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="650" y="345" width="180" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_mkvB" value="Master KV-B"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="650" y="405" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-B-Dev + KV -->
+        <mxCell id="s2_sp_bdev" value="&lt;b&gt;SP-B-Dev&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="885" y="325" width="145" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_kv_bdev" value="KV-B-Dev"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="885" y="398" width="145" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-B-Prod + KV -->
+        <mxCell id="s2_sp_bprd" value="&lt;b&gt;SP-B-Prod&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="1045" y="325" width="115" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_kv_bprd" value="KV-B-Prod"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="1045" y="398" width="115" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- Benefit note -->
+        <mxCell id="s2_note" value="✅ Blast radius limited per project — compromise of Master SP-A has no access to Project B resources"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=2;"
+          vertex="1" parent="1">
+          <mxGeometry x="200" y="515" width="860" height="32" as="geometry"/>
+        </mxCell>
+
+        <!-- EDGES Project A -->
+        <mxCell id="s2_e1" value="reads" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s2_yamlA" target="s2_srfA" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_e2" value="reads master secret" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s2_srfA" target="s2_mkvA" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_e3" value="rotates" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s2_mspA" target="s2_sp_adev" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_e4" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s2_mspA" target="s2_sp_aprd" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_e5" value="saves secret" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s2_sp_adev" target="s2_kv_adev" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_e6" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s2_sp_aprd" target="s2_kv_aprd" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- EDGES Project B -->
+        <mxCell id="s2_e7" value="reads" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s2_yamlB" target="s2_srfB" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_e8" value="reads master secret" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s2_srfB" target="s2_mkvB" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_e9" value="rotates" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s2_mspB" target="s2_sp_bdev" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_e10" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s2_mspB" target="s2_sp_bprd" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_e11" value="saves secret" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s2_sp_bdev" target="s2_kv_bdev" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_e12" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s2_sp_bprd" target="s2_kv_bprd" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!--  SCENARIO 3: MASTER SP PER PROJECT × ENVIRONMENT TIER          -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <diagram id="s3" name="3 — Master SP per Project (Non-Prod + Prod)">
+    <mxGraphModel dx="1600" dy="950" grid="1" gridSize="10" guides="1" pageWidth="1654" pageHeight="1169" math="0" shadow="1">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="s3_title" value="Scenario 3 — Master SP per Project, separated for Non-Prod and Prod  (maximum isolation)"
+          style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=14;fontStyle=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="60" y="18" width="1520" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Note -->
+        <mxCell id="s3_runnote" value="ℹ️  Each master SP runs SRF independently with its own input.yaml  (4 separate CI pipelines: A-NonProd, A-Prod, B-NonProd, B-Prod)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=2;"
+          vertex="1" parent="1">
+          <mxGeometry x="150" y="55" width="1320" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- ════════════ PROJECT A ════════════ -->
+        <mxCell id="s3_pA" value="&lt;b&gt;Project A&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;verticalAlign=top;fontSize=13;opacity=20;"
+          vertex="1" parent="1">
+          <mxGeometry x="20" y="100" width="1590" height="340" as="geometry"/>
+        </mxCell>
+
+        <!-- Project A — Non-Prod -->
+        <mxCell id="s3_pA_np" value="&lt;b&gt;Non-Prod&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9e6;strokeColor=#f0a30a;dashed=1;verticalAlign=top;fontSize=12;opacity=50;"
+          vertex="1" parent="1">
+          <mxGeometry x="35" y="130" width="750" height="290" as="geometry"/>
+        </mxCell>
+
+        <!-- input-A-NP.yaml -->
+        <mxCell id="s3_yamlA_np" value="&lt;b&gt;input-A-NP.yaml&lt;/b&gt;"
+          style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=11;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="100" y="150" width="130" height="48" as="geometry"/>
+        </mxCell>
+
+        <!-- SRF Run A-NP -->
+        <mxCell id="s3_srf_anp" value="&lt;b&gt;SRF Tool&lt;/b&gt;  (Run A-NP)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="55" y="248" width="200" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- Master A-NP -->
+        <mxCell id="s3_mboxA_np" value="&lt;b&gt;Master NP-A&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="50" y="330" width="195" height="155" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_mspA_np" value="&lt;b&gt;Master SP-A-NP&lt;/b&gt;&lt;br&gt;Owner: A Dev + Test + Staging"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="58" y="360" width="178" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_mkvA_np" value="Master KV-A-NP"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="58" y="418" width="178" height="48" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-A-Dev -->
+        <mxCell id="s3_sp_adev" value="&lt;b&gt;SP-A-Dev&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="280" y="340" width="130" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_kv_adev" value="KV-A-Dev"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="280" y="408" width="130" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-A-Test -->
+        <mxCell id="s3_sp_atst" value="&lt;b&gt;SP-A-Test&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="428" y="340" width="130" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_kv_atst" value="KV-A-Test"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="428" y="408" width="130" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-A-Staging -->
+        <mxCell id="s3_sp_astg" value="&lt;b&gt;SP-A-Staging&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="576" y="340" width="130" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_kv_astg" value="KV-A-Staging"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="576" y="408" width="130" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- Project A — Prod -->
+        <mxCell id="s3_pA_prd" value="&lt;b&gt;Prod&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fde7e7;strokeColor=#b85450;dashed=1;verticalAlign=top;fontSize=12;opacity=50;"
+          vertex="1" parent="1">
+          <mxGeometry x="815" y="130" width="780" height="290" as="geometry"/>
+        </mxCell>
+
+        <!-- input-A-Prod.yaml -->
+        <mxCell id="s3_yamlA_prd" value="&lt;b&gt;input-A-Prod.yaml&lt;/b&gt;"
+          style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=11;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="880" y="150" width="130" height="48" as="geometry"/>
+        </mxCell>
+
+        <!-- SRF Run A-Prod -->
+        <mxCell id="s3_srf_aprd" value="&lt;b&gt;SRF Tool&lt;/b&gt;  (Run A-Prod)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="832" y="248" width="210" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- Master A-Prod -->
+        <mxCell id="s3_mboxA_prd" value="&lt;b&gt;Master Prod-A&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="830" y="330" width="200" height="155" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_mspA_prd" value="&lt;b&gt;Master SP-A-Prod&lt;/b&gt;&lt;br&gt;Owner: A Prod SPs ONLY"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="840" y="360" width="180" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_mkvA_prd" value="Master KV-A-Prod"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="840" y="418" width="180" height="48" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-A-Prod -->
+        <mxCell id="s3_sp_aprd" value="&lt;b&gt;SP-A-Prod&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="1065" y="340" width="130" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_kv_aprd" value="KV-A-Prod"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="1065" y="408" width="130" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-A-Prod-DR -->
+        <mxCell id="s3_sp_aprddr" value="&lt;b&gt;SP-A-Prod-DR&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="1215" y="340" width="130" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_kv_aprddr" value="KV-A-Prod-DR"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="1215" y="408" width="130" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- ════════════ PROJECT B ════════════ -->
+        <mxCell id="s3_pB" value="&lt;b&gt;Project B&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;dashed=1;verticalAlign=top;fontSize=13;opacity=20;"
+          vertex="1" parent="1">
+          <mxGeometry x="20" y="480" width="1590" height="320" as="geometry"/>
+        </mxCell>
+
+        <!-- Project B — Non-Prod -->
+        <mxCell id="s3_pB_np" value="&lt;b&gt;Non-Prod&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9e6;strokeColor=#f0a30a;dashed=1;verticalAlign=top;fontSize=12;opacity=50;"
+          vertex="1" parent="1">
+          <mxGeometry x="35" y="510" width="750" height="268" as="geometry"/>
+        </mxCell>
+
+        <!-- input-B-NP.yaml -->
+        <mxCell id="s3_yamlB_np" value="&lt;b&gt;input-B-NP.yaml&lt;/b&gt;"
+          style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=11;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="100" y="528" width="130" height="48" as="geometry"/>
+        </mxCell>
+
+        <!-- SRF Run B-NP -->
+        <mxCell id="s3_srf_bnp" value="&lt;b&gt;SRF Tool&lt;/b&gt;  (Run B-NP)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="55" y="622" width="200" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- Master B-NP -->
+        <mxCell id="s3_mboxB_np" value="&lt;b&gt;Master NP-B&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="50" y="704" width="195" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_mspB_np" value="&lt;b&gt;Master SP-B-NP&lt;/b&gt;&lt;br&gt;Owner: B Dev + Test SPs"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="58" y="704" width="178" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_mkvB_np" value="Master KV-B-NP"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="58" y="758" width="178" height="48" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-B-Dev -->
+        <mxCell id="s3_sp_bdev" value="&lt;b&gt;SP-B-Dev&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="280" y="715" width="130" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_kv_bdev" value="KV-B-Dev"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="280" y="762" width="130" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-B-Test -->
+        <mxCell id="s3_sp_btst" value="&lt;b&gt;SP-B-Test&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="428" y="715" width="130" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_kv_btst" value="KV-B-Test"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="428" y="762" width="130" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- Project B — Prod -->
+        <mxCell id="s3_pB_prd" value="&lt;b&gt;Prod&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fde7e7;strokeColor=#b85450;dashed=1;verticalAlign=top;fontSize=12;opacity=50;"
+          vertex="1" parent="1">
+          <mxGeometry x="815" y="510" width="780" height="268" as="geometry"/>
+        </mxCell>
+
+        <!-- input-B-Prod.yaml -->
+        <mxCell id="s3_yamlB_prd" value="&lt;b&gt;input-B-Prod.yaml&lt;/b&gt;"
+          style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=11;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="880" y="528" width="130" height="48" as="geometry"/>
+        </mxCell>
+
+        <!-- SRF Run B-Prod -->
+        <mxCell id="s3_srf_bprd" value="&lt;b&gt;SRF Tool&lt;/b&gt;  (Run B-Prod)"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="832" y="622" width="210" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- Master B-Prod -->
+        <mxCell id="s3_mboxB_prd" value="&lt;b&gt;Master Prod-B&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="830" y="704" width="200" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_mspB_prd" value="&lt;b&gt;Master SP-B-Prod&lt;/b&gt;&lt;br&gt;Owner: B Prod SPs ONLY"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="840" y="704" width="180" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_mkvB_prd" value="Master KV-B-Prod"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;"
+          vertex="1" parent="1">
+          <mxGeometry x="840" y="758" width="180" height="48" as="geometry"/>
+        </mxCell>
+
+        <!-- SP-B-Prod -->
+        <mxCell id="s3_sp_bprd" value="&lt;b&gt;SP-B-Prod&lt;/b&gt;"
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="1065" y="715" width="130" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_kv_bprd" value="KV-B-Prod"
+          style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;"
+          vertex="1" parent="1">
+          <mxGeometry x="1065" y="762" width="130" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- ── EDGES Scenario 3 ── -->
+        <!-- Run A-NP -->
+        <mxCell id="s3_e1" value="reads" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_yamlA_np" target="s3_srf_anp" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e2" value="reads master secret" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_srf_anp" target="s3_mkvA_np" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e3" value="rotates" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_mspA_np" target="s3_sp_adev" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e4" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_mspA_np" target="s3_sp_atst" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e5" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_mspA_np" target="s3_sp_astg" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e6" value="saves" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s3_sp_adev" target="s3_kv_adev" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e7" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s3_sp_atst" target="s3_kv_atst" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e8" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s3_sp_astg" target="s3_kv_astg" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Run A-Prod -->
+        <mxCell id="s3_e9" value="reads" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_yamlA_prd" target="s3_srf_aprd" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e10" value="reads master secret" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_srf_aprd" target="s3_mkvA_prd" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e11" value="rotates" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_mspA_prd" target="s3_sp_aprd" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e12" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_mspA_prd" target="s3_sp_aprddr" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e13" value="saves" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s3_sp_aprd" target="s3_kv_aprd" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e14" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s3_sp_aprddr" target="s3_kv_aprddr" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Run B-NP -->
+        <mxCell id="s3_e15" value="reads" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_yamlB_np" target="s3_srf_bnp" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e16" value="reads master secret" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_srf_bnp" target="s3_mkvB_np" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e17" value="rotates" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_mspB_np" target="s3_sp_bdev" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e18" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_mspB_np" target="s3_sp_btst" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e19" value="saves" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s3_sp_bdev" target="s3_kv_bdev" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e20" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s3_sp_btst" target="s3_kv_btst" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Run B-Prod -->
+        <mxCell id="s3_e21" value="reads" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_yamlB_prd" target="s3_srf_bprd" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e22" value="reads master secret" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_srf_bprd" target="s3_mkvB_prd" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e23" value="rotates" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="s3_mspB_prd" target="s3_sp_bprd" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_e24" value="saves" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;dashed=1;" edge="1" source="s3_sp_bprd" target="s3_kv_bprd" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Benefit note -->
+        <mxCell id="s3_note" value="✅ Maximum isolation — Prod master SP credentials never touch Non-Prod resources. Different teams can own different pipelines. Prod access tightly controlled."
+          style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=2;"
+          vertex="1" parent="1">
+          <mxGeometry x="150" y="840" width="1330" height="32" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>
