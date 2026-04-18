@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import sys
 from datetime import datetime, timezone, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -254,12 +254,22 @@ def test_env_var_auth_skips_keyvault(no_kv_yaml, mock_azure, monkeypatch):
     assert not mock_azure["set_secret"].called
 
 
-def test_no_auth_source_raises_on_startup(tmp_path, monkeypatch, capsys):
-    """No env var AND no KV fields → RuntimeError before any Azure calls."""
+def test_no_auth_source_uses_oidc_fallback(tmp_path, monkeypatch, capsys):
+    """No env var AND no KV fields → DefaultAzureCredential is used (OIDC/managed identity).
+    The tool starts up normally; Azure auth errors surface as per-SP failures, not crashes."""
     monkeypatch.delenv("SRF_MASTER_CLIENT_SECRET", raising=False)
     p = tmp_path / "no_auth.yaml"
     p.write_text(_NO_KV_YAML)
     monkeypatch.setattr(sys, "argv", ["srf", "--config", str(p)])
 
-    with pytest.raises((RuntimeError, SystemExit)):
-        main.main()
+    # Patch DefaultAzureCredential to prevent real network calls
+    with patch("srf.auth.provider.DefaultAzureCredential") as mock_dac, \
+         patch("srf.graph.client.GraphClient.__init__", lambda self, *a, **kw: None), \
+         patch("srf.graph.client.GraphClient.list_password_credentials",
+               lambda self, app_id: (_ for _ in ()).throw(RuntimeError("no token"))), \
+         patch("srf.graph.client.GraphClient.list_owners", lambda self, app_id: []):
+        mock_dac.return_value = MagicMock()
+        result = main.main()
+
+    # Tool exits with code 1 (failures) but does NOT crash with an unhandled exception
+    assert result == 1
