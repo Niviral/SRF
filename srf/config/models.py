@@ -8,8 +8,10 @@ from pydantic import BaseModel, Field
 
 class MainConfig(BaseModel):
     tenant_id: str
-    master_client_id: str
-    # KV fields are optional — if omitted, set SRF_MASTER_CLIENT_SECRET env var instead
+    # Required for Mode 1 (env var) and Mode 3 (KV bootstrap).
+    # Optional for Mode 2 (OIDC / DefaultAzureCredential) — AZURE_CLIENT_ID env var is used instead.
+    master_client_id: Optional[str] = Field(default=None)
+    # KV fields — only for Mode 3 (KV bootstrap with pre-existing managed identity)
     master_keyvault_id: Optional[str] = Field(default=None)
     master_keyvault_secret_name: Optional[str] = Field(default=None)
     threshold_days: int = Field(default=7)

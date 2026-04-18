@@ -53,8 +53,16 @@
           "type": "string"
         },
         "master_client_id": {
-          "title": "Master Client Id",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Master Client Id"
         },
         "master_keyvault_id": {
           "anyOf": [
@@ -99,8 +107,7 @@
         }
       },
       "required": [
-        "tenant_id",
-        "master_client_id"
+        "tenant_id"
       ],
       "title": "MainConfig",
       "type": "object"

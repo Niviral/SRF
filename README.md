@@ -86,41 +86,84 @@ venv/bin/pip install -r requirements.txt
 
 ## Authentication
 
-The tool resolves the master SP client secret using the following priority order:
+SRF needs to authenticate as the **master SP** to call the Microsoft Graph API.  
+Three modes are supported — pick the one that fits your setup:
 
-### 1. `SRF_MASTER_CLIENT_SECRET` environment variable *(CI/CD and local dev)*
+---
 
-Set this env var to skip Key Vault entirely. The secret is used directly to create the master SP credential.
+### Mode 1 — OIDC / Workload Identity Federation *(recommended for GitHub Actions, zero secrets)*
 
-```bash
-export SRF_MASTER_CLIENT_SECRET="<master-sp-client-secret>"
-python main.py
+GitHub Actions exchanges an OIDC token directly with Azure AD. No client secret exists anywhere — not in GitHub, not in a Key Vault, not in config files.
+
+**One-time Azure setup:**
+1. Open the master SP app registration in Azure AD
+2. Go to **Certificates & secrets → Federated credentials → Add credential**
+3. Scenario: *GitHub Actions deploying Azure resources*
+4. Set Organisation, Repository, and Entity (branch/tag/environment)
+
+**GitHub Actions workflow** — see [`.github/workflows/srf-run-oidc.yml`](.github/workflows/srf-run-oidc.yml)
+
+**`input.yaml`** — `master_client_id` is optional here (`AZURE_CLIENT_ID` variable handles it):
+
+```yaml
+main:
+  tenant_id: <your-tenant-id>
+  threshold_days: 7
+  validity_days: 365
 ```
 
-**GitHub Actions example:**
+---
+
+### Mode 2 — `SRF_MASTER_CLIENT_SECRET` env var *(simple GitHub Actions setup)*
+
+Store the master SP client secret as a [GitHub repository secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets).  
+The secret is masked in all logs; never written to disk or visible in process listings.
+
+**GitHub Actions workflow** — see [`.github/workflows/srf-run-secret.yml`](.github/workflows/srf-run-secret.yml)
+
 ```yaml
+# In your workflow:
 - name: Run SRF
   env:
     SRF_MASTER_CLIENT_SECRET: ${{ secrets.MASTER_SP_SECRET }}
-  run: python main.py --dry-run
+  run: python main.py
 ```
 
-The secret lives in GitHub/pipeline secrets (encrypted, masked in logs) and is never written to disk or visible in the process list.
+**`input.yaml`** — needs `master_client_id`:
 
-### 2. Key Vault bootstrap *(recommended for production)*
+```yaml
+main:
+  tenant_id: <your-tenant-id>
+  master_client_id: <master-sp-client-id>
+```
 
-If `SRF_MASTER_CLIENT_SECRET` is not set, the tool falls back to the two-step KV bootstrap:
+---
 
-1. `DefaultAzureCredential` authenticates using the host identity  
-   *(Managed Identity, `az login`, `AZURE_CLIENT_ID`/`AZURE_CLIENT_SECRET` env vars, etc.)*
-2. The master SP's client secret is read from the configured Key Vault
-3. A `ClientSecretCredential` is created for all Graph API and target KV calls
+### Mode 3 — Key Vault bootstrap *(for Azure-hosted compute with Managed Identity)*
 
-The master SP's client secret is **never stored in the YAML file** — only the Key Vault reference is.
+> ⚠️ **Not recommended for GitHub Actions** — the runner has no managed identity,
+> creating a bootstrap loop: you need credentials to reach the KV, and the KV holds the credentials.
 
-### Error on startup
+Use this only on Azure VMs, AKS, Azure Container Apps, or other compute where
+`DefaultAzureCredential` resolves to a managed identity that has `Key Vault Secrets User` on the master KV.
 
-If neither `SRF_MASTER_CLIENT_SECRET` is set nor `master_keyvault_id` + `master_keyvault_secret_name` are provided in the YAML, the tool exits immediately with a clear error message.
+```yaml
+main:
+  tenant_id: <your-tenant-id>
+  master_client_id: <master-sp-client-id>
+  master_keyvault_id: /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<kv>
+  master_keyvault_secret_name: master-sp-client-secret
+```
+
+---
+
+### Summary
+
+| Mode | Secret stored where | Requires KV | GitHub Actions |
+|---|---|---|---|
+| **1 — OIDC** | Nowhere (zero secrets) | No | ✅ Recommended |
+| **2 — Env var** | GitHub Secrets (encrypted) | No | ✅ Simple |
+| **3 — KV bootstrap** | Azure Key Vault | Yes | ⚠️ Bootstrap loop |
 
 ---
 
