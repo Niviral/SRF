@@ -99,6 +99,7 @@ tests/
 - One feature/fix per PR; all CI checks must be green before merging.
 - Target branch: `master`
 - Don't add copilot as Co-Author in commit messages — the commit history should reflect human authorship only.
+- **Before starting any new feature or fix, always create a dedicated branch** (`git checkout -b feature/<desc>`) and verify you are on that branch before making any commits.
 
 ---
 
