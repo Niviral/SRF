@@ -42,12 +42,10 @@ def _print_summary(results: list[RotationResult]) -> None:
     print(sep)
 
     for r in rotated:
-        print(col.format(
-            r.name[:19], r.app_id,
-            "✓ ROTATED",
-            _fmt(r.new_expiry),
-            f"vault={r.keyvault_name}",
-        ))
+        detail = f"vault={r.keyvault_name}"
+        if r.kv_secret_missing:
+            detail += " (kv-secret-missing)"
+        print(col.format(r.name[:19], r.app_id, "✓ ROTATED", _fmt(r.new_expiry), detail))
         for warning in r.cleanup_warnings:
             print(f"  ⚠ CLEANUP WARNING: {warning}")
     for r in skipped:
@@ -60,12 +58,8 @@ def _print_summary(results: list[RotationResult]) -> None:
     for r in dry_run_results:
         if r.rotation_needed or r.was_created:
             label = "WOULD CREATE" if r.was_created else "WOULD ROTATE"
-            print(col.format(
-                r.name[:19], r.app_id,
-                f"~ {label}",
-                _fmt(r.current_expiry),
-                f"vault={r.keyvault_name}",
-            ))
+            reason = "kv-secret-missing" if r.kv_secret_missing else f"vault={r.keyvault_name}"
+            print(col.format(r.name[:19], r.app_id, f"~ {label}", _fmt(r.current_expiry), reason))
         else:
             print(col.format(
                 r.name[:19], r.app_id,

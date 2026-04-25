@@ -56,6 +56,7 @@ class GraphClient:
             logger.debug("srf.graph.client: object_id cache hit for app_id=%s", app_id)
             return self._object_id_cache[app_id]
 
+        logger.debug("resolving object_id for app_id=%s via Graph API", app_id)
         from msgraph.generated.applications.applications_request_builder import (
             ApplicationsRequestBuilder,
         )
