@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 
 from azure.core.credentials import TokenCredential
@@ -9,6 +10,7 @@ from srf.config.models import MainConfig
 from srf.keyvault.client import KeyVaultClient
 
 _ENV_VAR = "SRF_MASTER_CLIENT_SECRET"
+logger = logging.getLogger(__name__)
 
 
 class AuthProvider:
@@ -49,6 +51,7 @@ class AuthProvider:
                 raise RuntimeError(
                     f"{_ENV_VAR!r} is set but 'master_client_id' is missing from the YAML config."
                 )
+            logger.info("Auth mode 1: ClientSecretCredential via %s env var (client_id=%s)", _ENV_VAR, self._config.master_client_id)
             return ClientSecretCredential(
                 tenant_id=self._config.tenant_id,
                 client_id=self._config.master_client_id,
@@ -63,6 +66,7 @@ class AuthProvider:
                 raise RuntimeError(
                     "Key Vault bootstrap requires 'master_client_id' in the YAML config."
                 )
+            logger.info("Auth mode 3: Key Vault bootstrap (keyvault=%s, client_id=%s)", self._config.master_keyvault_id, self._config.master_client_id)
             bootstrap_credential = DefaultAzureCredential()
             kv = KeyVaultClient(
                 credential=bootstrap_credential,
@@ -83,5 +87,6 @@ class AuthProvider:
         #   - Local: az login session
         #   - Azure compute: Managed Identity
         # No client secret is required; Azure handles token exchange.
+        logger.info("Auth mode 2: DefaultAzureCredential (OIDC / az login / Managed Identity)")
         return DefaultAzureCredential()
 

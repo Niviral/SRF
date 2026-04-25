@@ -279,8 +279,33 @@ python main.py --workers 10
 | `--threshold-days` | YAML value (7) | Override: days before expiry to trigger rotation |
 | `--validity-days` | YAML value (365) | Override: new secret validity in days |
 | `--workers` | `5` | Max parallel threads |
+| `--dry-run` | off | Show what would change without making any writes |
+| `--no-mail` | off | Suppress email report even if mail config is present |
+| `--validate` | off | Validate `input.yaml` against the JSON schema and exit |
+| `--debug` | off | Enable `DEBUG` logging for SRF modules (overrides `LOG_LEVEL`) |
 
 > CLI flags always take precedence over YAML values when explicitly provided.
+
+### Logging
+
+By default the tool is silent (log level `WARNING`). To enable logs set the `LOG_LEVEL` environment variable or use the `--debug` flag:
+
+```bash
+# INFO — key milestones (auth mode, config loaded, rotation decisions)
+export LOG_LEVEL=INFO
+poetry run python main.py
+
+# DEBUG — full trace (Graph API calls, KV operations, ownership checks)
+export LOG_LEVEL=DEBUG
+poetry run python main.py
+
+# --debug flag — always DEBUG, takes priority over LOG_LEVEL
+poetry run python main.py --debug
+```
+
+Valid values for `LOG_LEVEL`: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`.
+
+> **Security:** only `srf.*` loggers are elevated. Third-party loggers (`azure`, `msgraph`, `urllib3`) always stay at `WARNING` to prevent tokens or request bodies from appearing in output.
 
 ---
 
