@@ -238,7 +238,11 @@ def test_rotate_performs_rotation():
     graph.add_password_credential.return_value = new_cred
 
     kv = MagicMock()
-    rotator = _make_rotator(graph, kv)
+    rotator = SecretRotator(
+        graph_client=graph,
+        keyvault_client_factory=lambda _: kv,
+        cleanup_old_secrets=True,
+    )
     result = rotator.rotate(_make_secret_cfg(description="desc"))
 
     assert result.rotated is True
@@ -272,7 +276,11 @@ def test_rotate_new_cred_not_removed():
     graph.list_password_credentials.return_value = [old_cred]
     graph.add_password_credential.return_value = new_cred
 
-    rotator = _make_rotator(graph, MagicMock())
+    rotator = SecretRotator(
+        graph_client=graph,
+        keyvault_client_factory=lambda _: MagicMock(),
+        cleanup_old_secrets=True,
+    )
     rotator.rotate(_make_secret_cfg())
 
     # remove should only be called for the OLD key
@@ -336,7 +344,11 @@ def test_rotate_cleanup_failure_recorded_as_warning():
     graph.add_password_credential.return_value = new_cred
     graph.remove_password_credential.side_effect = RuntimeError("Graph error")
 
-    rotator = _make_rotator(graph, MagicMock())
+    rotator = SecretRotator(
+        graph_client=graph,
+        keyvault_client_factory=lambda _: MagicMock(),
+        cleanup_old_secrets=True,
+    )
     result = rotator.rotate(_make_secret_cfg())
 
     assert result.rotated is True
@@ -551,4 +563,59 @@ def test_per_secret_only_threshold_no_validity_uses_global_validity():
         app_id="app-0001",
         display_name="Default Secret",
         validity_days=180,
+    )
+
+
+# ---------------------------------------------------------------------------
+# cleanup_old_secrets flag
+# ---------------------------------------------------------------------------
+
+
+def test_cleanup_disabled_by_default_no_remove_called():
+    """With cleanup_old_secrets=False (default), old credentials are not deleted."""
+    new_cred = MagicMock()
+    new_cred.key_id = "key-new"
+    new_cred.secret_text = "s"
+    new_cred.end_date_time = NOW + timedelta(days=365)
+
+    old_cred = _cred(-5)
+    old_cred.key_id = "key-old"
+
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = [old_cred]
+    graph.add_password_credential.return_value = new_cred
+
+    rotator = _make_rotator(graph, MagicMock())  # cleanup_old_secrets defaults to False
+    result = rotator.rotate(_make_secret_cfg())
+
+    assert result.rotated is True
+    assert result.cleanup_warnings == []
+    graph.remove_password_credential.assert_not_called()
+
+
+def test_cleanup_enabled_removes_old_credentials():
+    """With cleanup_old_secrets=True, old credentials are deleted after rotation."""
+    new_cred = MagicMock()
+    new_cred.key_id = "key-new"
+    new_cred.secret_text = "s"
+    new_cred.end_date_time = NOW + timedelta(days=365)
+
+    old_cred = _cred(-5)
+    old_cred.key_id = "key-old"
+
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = [old_cred]
+    graph.add_password_credential.return_value = new_cred
+
+    rotator = SecretRotator(
+        graph_client=graph,
+        keyvault_client_factory=lambda _: MagicMock(),
+        cleanup_old_secrets=True,
+    )
+    result = rotator.rotate(_make_secret_cfg())
+
+    assert result.rotated is True
+    graph.remove_password_credential.assert_called_once_with(
+        app_id="app-0001",
+        key_id="key-old",
     )

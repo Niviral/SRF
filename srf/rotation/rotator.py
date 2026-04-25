@@ -46,6 +46,7 @@ class SecretRotator:
         validity_days: int = 365,
         dry_run: bool = False,
         run_id: Optional[str] = None,
+        cleanup_old_secrets: bool = False,
     ) -> None:
         """
         Args:
@@ -58,12 +59,15 @@ class SecretRotator:
             run_id: UUID v8 run identifier used as the Azure AD credential display_name
                 prefix (``{secret_name}-<first_13_chars>``). When omitted, falls back to the
                 static string ``"{secret_name}"``.
+            cleanup_old_secrets: If True, remove all previous SP credentials after a
+                successful rotation. Defaults to False (old credentials are retained).
         """
         self._graph = graph_client
         self._kv_factory = keyvault_client_factory
         self._threshold = timedelta(days=threshold_days)
         self._validity_days = validity_days
         self._dry_run = dry_run
+        self._cleanup_old_secrets = cleanup_old_secrets
         self._display_name = f"{secret_name}-{run_id}" if run_id else secret_name
         self._run_id = run_id
 
@@ -236,29 +240,35 @@ class SecretRotator:
             )
 
             cleanup_warnings: list[str] = []
-            for old_cred in credentials:
-                if old_cred.key_id and old_cred.key_id != new_cred.key_id:
-                    logger.debug(
-                        "[%s] removing old credential key_id=%s",
-                        secret_config.name,
-                        old_cred.key_id,
-                    )
-                    try:
-                        self._graph.remove_password_credential(
-                            app_id=secret_config.app_id,
-                            key_id=str(old_cred.key_id),
-                        )
-                    except Exception as exc:
-                        cleanup_warnings.append(
-                            f"Failed to remove old credential {old_cred.key_id}: "
-                            f"{type(exc).__name__}"
-                        )
-                        logger.warning(
-                            "[%s] cleanup failed for key_id=%s: %s",
+            if self._cleanup_old_secrets:
+                for old_cred in credentials:
+                    if old_cred.key_id and old_cred.key_id != new_cred.key_id:
+                        logger.debug(
+                            "[%s] removing old credential key_id=%s",
                             secret_config.name,
                             old_cred.key_id,
-                            type(exc).__name__,
                         )
+                        try:
+                            self._graph.remove_password_credential(
+                                app_id=secret_config.app_id,
+                                key_id=str(old_cred.key_id),
+                            )
+                        except Exception as exc:
+                            cleanup_warnings.append(
+                                f"Failed to remove old credential {old_cred.key_id}: "
+                                f"{type(exc).__name__}"
+                            )
+                            logger.warning(
+                                "[%s] cleanup failed for key_id=%s: %s",
+                                secret_config.name,
+                                old_cred.key_id,
+                                type(exc).__name__,
+                            )
+            else:
+                logger.debug(
+                    "[%s] skipping old credential cleanup (cleanup_old_secrets disabled)",
+                    secret_config.name,
+                )
 
             logger.info(
                 "[%s] rotation complete new_expiry=%s",

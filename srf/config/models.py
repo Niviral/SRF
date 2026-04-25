@@ -16,6 +16,7 @@ class MainConfig(BaseModel):
     threshold_days: int = Field(default=7, ge=0, le=365)
     validity_days: ValidityDays = Field(default=365)
     master_owners: list[str] = Field(default_factory=list)
+    cleanup_old_secrets: bool = Field(default=False)
 
     @model_validator(mode="after")
     def _validity_exceeds_threshold(self) -> "MainConfig":

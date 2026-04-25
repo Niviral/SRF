@@ -269,3 +269,31 @@ def test_per_secret_validity_must_exceed_threshold(tmp_path):
 
     with pytest.raises(Exception, match="validity_days"):
         load_config(str(cfg_file))
+
+
+def test_cleanup_old_secrets_default_false(tmp_path):
+    cfg_file = tmp_path / "cfg.yaml"
+    cfg_file.write_text(MINIMAL_YAML)
+
+    cfg = load_config(str(cfg_file))
+
+    assert cfg.main.cleanup_old_secrets is False
+
+
+def test_cleanup_old_secrets_can_be_enabled(tmp_path):
+    yaml_text = textwrap.dedent("""\
+        main:
+          tenant_id: tid
+          cleanup_old_secrets: true
+        secrets:
+          - name: sp1
+            app_id: app-001
+            keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
+            secret_name: sp1-secret
+    """)
+    cfg_file = tmp_path / "cfg.yaml"
+    cfg_file.write_text(yaml_text)
+
+    cfg = load_config(str(cfg_file))
+
+    assert cfg.main.cleanup_old_secrets is True

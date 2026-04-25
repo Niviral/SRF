@@ -111,6 +111,11 @@
           },
           "title": "Master Owners",
           "type": "array"
+        },
+        "cleanup_old_secrets": {
+          "default": false,
+          "title": "Cleanup Old Secrets",
+          "type": "boolean"
         }
       },
       "required": [
