@@ -99,7 +99,7 @@ tests/
 - One feature/fix per PR; all CI checks must be green before merging.
 - Target branch: `master`
 - Don't add copilot as Co-Author in commit messages — the commit history should reflect human authorship only.
-- **Before starting any new feature or fix, always create a dedicated branch** (`git checkout -b feature/<desc>`) and verify you are on that branch before making any commits.
+- **Before starting any work — features, fixes, chores, docs, or any other change — always create a dedicated branch** (`git checkout -b feature/<desc>`, `fix/<desc>`, `chore/<desc>`, etc.) and verify you are on that branch before making any commits. Never commit directly to `master` or an unrelated branch.
 - **When using `/fleet` or any command that implies parallel development across multiple features, use git worktrees** instead of switching branches in the same working directory. Create a worktree per feature: `git worktree add ../SRF-<desc> feature/<desc>`. This keeps each feature's working tree isolated and avoids accidental cross-feature commits.
 
 ---
