@@ -7,7 +7,7 @@ main:
 
   # --- Auth Mode 2: GitHub Secret env var ---
   # Set SRF_MASTER_CLIENT_SECRET in your workflow env + uncomment:
-  # master_client_id: 422e63ed-df23-4bd0-98de-2a20762a7c7d
+  master_client_id: 422e63ed-df23-4bd0-98de-2a20762a7c7d
 
   # --- Auth Mode 3: Key Vault bootstrap (managed identity only, NOT for GitHub Actions) ---
   # master_client_id: 422e63ed-df23-4bd0-98de-2a20762a7c7d

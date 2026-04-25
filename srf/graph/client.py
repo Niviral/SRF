@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import datetime, timedelta, timezone
 
 from azure.core.credentials import TokenCredential
@@ -16,6 +17,7 @@ from msgraph.generated.models.reference_create import ReferenceCreate
 
 
 _GRAPH_SCOPES = ["https://graph.microsoft.com/.default"]
+logger = logging.getLogger(__name__)
 
 
 class GraphClient:
