@@ -44,6 +44,7 @@ class SecretRotator:
         threshold_days: int = 7,
         validity_days: int = 365,
         dry_run: bool = False,
+        run_id: Optional[str] = None,
     ) -> None:
         """
         Args:
@@ -53,12 +54,16 @@ class SecretRotator:
             threshold_days: Rotate if expiry is within this many days (or already expired).
             validity_days: Validity period for newly created credentials.
             dry_run: If True, no writes are made; results reflect what would happen.
+            run_id: UUID v8 run identifier used as the Azure AD credential display_name
+                prefix (``srf-<first_13_chars>``). When omitted, falls back to the
+                static string ``"rotated-by-srf"``.
         """
         self._graph = graph_client
         self._kv_factory = keyvault_client_factory
         self._threshold = timedelta(days=threshold_days)
         self._validity_days = validity_days
         self._dry_run = dry_run
+        self._display_name = f"srf-{run_id[:13]}" if run_id else "rotated-by-srf"
 
     # ------------------------------------------------------------------
 
@@ -176,7 +181,7 @@ class SecretRotator:
             logger.info("[%s] rotating secret (was_created=%s kv_secret_missing=%s)", secret_config.name, was_created, kv_secret_missing)
             new_cred = self._graph.add_password_credential(
                 app_id=secret_config.app_id,
-                display_name=f"rotated-by-srf",
+                display_name=self._display_name,
                 validity_days=eff_validity,
             )
 
