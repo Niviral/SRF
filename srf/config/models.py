@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Literal, Optional
 
 import yaml
 from pydantic import BaseModel, Field, model_validator
+
+ValidityDays = Literal[90, 180, 365]
 
 
 class MainConfig(BaseModel):
@@ -12,7 +14,7 @@ class MainConfig(BaseModel):
     master_keyvault_id: Optional[str] = Field(default=None)
     master_keyvault_secret_name: Optional[str] = Field(default=None)
     threshold_days: int = Field(default=7, ge=0, le=365)
-    validity_days: int = Field(default=365, ge=1, le=730)
+    validity_days: ValidityDays = Field(default=365)
     master_owners: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
@@ -43,7 +45,7 @@ class SecretConfig(BaseModel):
     keyvault_secret_description: Optional[str] = Field(default=None)
     required_owners: list[str] = Field(default_factory=list)
     threshold_days: Optional[int] = Field(default=None, ge=0, le=365)
-    validity_days: Optional[int] = Field(default=None, ge=1, le=730)
+    validity_days: Optional[ValidityDays] = Field(default=None)
 
     @model_validator(mode="after")
     def _validity_exceeds_threshold(self) -> "SecretConfig":

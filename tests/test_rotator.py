@@ -395,7 +395,7 @@ def test_per_secret_only_threshold_no_validity_uses_global_validity():
     rotator = SecretRotator(
         graph_client=graph,
         keyvault_client_factory=lambda _: MagicMock(),
-        validity_days=270,
+        validity_days=180,
     )
     cfg = SecretConfig(
         name="sp1", app_id="app-0001", keyvault_id=KV_ID,
@@ -406,5 +406,5 @@ def test_per_secret_only_threshold_no_validity_uses_global_validity():
     graph.add_password_credential.assert_called_once_with(
         app_id="app-0001",
         display_name="rotated-by-srf",
-        validity_days=270,
+        validity_days=180,
     )

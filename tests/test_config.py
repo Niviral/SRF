@@ -166,14 +166,14 @@ def test_threshold_days_negative_raises(tmp_path):
         load_config(str(cfg_file))
 
 
-def test_validity_days_out_of_range_raises(tmp_path):
+def test_validity_days_invalid_value_raises(tmp_path):
     yaml_text = textwrap.dedent("""\
         main:
           tenant_id: tid
           master_client_id: cid
           master_keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/kv
           master_keyvault_secret_name: sec
-          validity_days: 731
+          validity_days: 200
         secrets: []
     """)
     cfg_file = tmp_path / "bad.yaml"

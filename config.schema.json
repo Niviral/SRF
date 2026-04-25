@@ -97,8 +97,11 @@
         },
         "validity_days": {
           "default": 365,
-          "maximum": 730,
-          "minimum": 1,
+          "enum": [
+            90,
+            180,
+            365
+          ],
           "title": "Validity Days",
           "type": "integer"
         },
@@ -170,8 +173,11 @@
         "validity_days": {
           "anyOf": [
             {
-              "maximum": 730,
-              "minimum": 1,
+              "enum": [
+                90,
+                180,
+                365
+              ],
               "type": "integer"
             },
             {
