@@ -383,6 +383,7 @@ def main() -> int:
         validity_days=validity,
         dry_run=args.dry_run,
         run_id=run_id_svc.run_id,
+        cleanup_old_secrets=config.main.cleanup_old_secrets,
     )
     ownership_checker = OwnershipChecker(
         graph_client=graph,
