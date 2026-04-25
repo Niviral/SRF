@@ -63,10 +63,24 @@ class SecretRotator:
     # ------------------------------------------------------------------
 
     def needs_rotation(self, credentials: list[PasswordCredential], threshold: Optional[timedelta] = None) -> tuple[bool, Optional[datetime]]:
-        """Return (needs_rotation, soonest_expiry) for the credential set."""
+        """Return (needs_rotation, soonest_expiry) for the credential set.
+
+        A threshold of zero is treated as "always rotate": rotation is forced
+        regardless of the current credential expiry.
+        """
         effective_threshold = threshold if threshold is not None else self._threshold
         if not credentials:
             return True, None
+
+        # threshold_days=0 means force rotation on every run
+        if effective_threshold == timedelta(0):
+            now = datetime.now(tz=timezone.utc)
+            soonest = min(
+                (c.end_date_time.replace(tzinfo=timezone.utc) if c.end_date_time and c.end_date_time.tzinfo is None else c.end_date_time)
+                for c in credentials
+                if c.end_date_time is not None
+            ) if any(c.end_date_time is not None for c in credentials) else None
+            return True, soonest
 
         now = datetime.now(tz=timezone.utc)
         soonest: Optional[datetime] = None
