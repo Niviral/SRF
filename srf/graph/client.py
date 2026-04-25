@@ -53,8 +53,10 @@ class GraphClient:
     async def _get_object_id(self, app_id: str) -> str:
         """Resolve appId (client ID) to the application's object ID (cached)."""
         if app_id in self._object_id_cache:
+            logger.debug("object_id cache hit for app_id=%s", app_id)
             return self._object_id_cache[app_id]
 
+        logger.debug("resolving object_id for app_id=%s via Graph API", app_id)
         from msgraph.generated.applications.applications_request_builder import (
             ApplicationsRequestBuilder,
         )
@@ -71,6 +73,7 @@ class GraphClient:
             raise ValueError(f"Application with appId '{app_id}' not found in the directory.")
         obj_id: str = apps[0].id  # type: ignore[assignment]
         self._object_id_cache[app_id] = obj_id
+        logger.debug("resolved app_id=%s -> object_id=%s", app_id, obj_id)
         return obj_id
 
     # ------------------------------------------------------------------
@@ -78,16 +81,20 @@ class GraphClient:
     # ------------------------------------------------------------------
 
     def list_password_credentials(self, app_id: str) -> list[PasswordCredential]:
+        logger.debug("listing password credentials for app_id=%s", app_id)
         async def _call():
             obj_id = await self._get_object_id(app_id)
             app = await self._graph.applications.by_application_id(obj_id).get()
             return app.password_credentials or []  # type: ignore[union-attr]
 
-        return self._run(_call())
+        creds = self._run(_call())
+        logger.debug("found %d credential(s) for app_id=%s", len(creds), app_id)
+        return creds
 
     def add_password_credential(
         self, app_id: str, display_name: str, validity_days: int = 365
     ) -> PasswordCredential:
+        logger.debug("adding password credential for app_id=%s display_name=%s validity_days=%d", app_id, display_name, validity_days)
         async def _call():
             obj_id = await self._get_object_id(app_id)
             end_dt = datetime.now(tz=timezone.utc) + timedelta(days=validity_days)
@@ -98,9 +105,12 @@ class GraphClient:
             body.password_credential = cred
             return await self._graph.applications.by_application_id(obj_id).add_password.post(body)
 
-        return self._run(_call())
+        new_cred = self._run(_call())
+        logger.info("added password credential for app_id=%s key_id=%s expires=%s", app_id, new_cred.key_id, new_cred.end_date_time)
+        return new_cred
 
     def remove_password_credential(self, app_id: str, key_id: str) -> None:
+        logger.debug("removing password credential app_id=%s key_id=%s", app_id, key_id)
         async def _call():
             obj_id = await self._get_object_id(app_id)
             body = RemovePasswordPostRequestBody()
@@ -108,8 +118,10 @@ class GraphClient:
             await self._graph.applications.by_application_id(obj_id).remove_password.post(body)
 
         self._run(_call())
+        logger.info("removed password credential app_id=%s key_id=%s", app_id, key_id)
 
     def list_owners(self, app_id: str) -> list[str]:
+        logger.debug("listing owners for app_id=%s", app_id)
         async def _call():
             obj_id = await self._get_object_id(app_id)
             result = await self._graph.applications.by_application_id(obj_id).owners.get()
@@ -120,9 +132,12 @@ class GraphClient:
                 if getattr(e, "odata_type", None) == "#microsoft.graph.user"
             ]
 
-        return self._run(_call())
+        owners = self._run(_call())
+        logger.debug("found %d owner(s) for app_id=%s", len(owners), app_id)
+        return owners
 
     def add_owner(self, app_id: str, user_object_id: str) -> None:
+        logger.debug("adding owner user_object_id=%s to app_id=%s", user_object_id, app_id)
         async def _call():
             obj_id = await self._get_object_id(app_id)
             body = ReferenceCreate()
@@ -130,3 +145,4 @@ class GraphClient:
             await self._graph.applications.by_application_id(obj_id).owners.ref.post(body)
 
         self._run(_call())
+        logger.info("added owner user_object_id=%s to app_id=%s", user_object_id, app_id)
