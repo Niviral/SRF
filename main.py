@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 from datetime import datetime, timezone
+from typing import Optional
 
 from srf.auth.provider import AuthProvider
 from srf.config.models import load_config
@@ -13,6 +14,7 @@ from srf.keyvault.client import KeyVaultClient
 from srf.ownership.checker import OwnershipChecker, OwnershipResult
 from srf.reporting.mail import MailReporter
 from srf.rotation.rotator import RotationResult, SecretRotator
+from srf.run_id.service import RunIdService
 from srf.runner.parallel import ParallelRunner
 
 logger = logging.getLogger(__name__)
@@ -24,7 +26,7 @@ def _make_kv_factory(credential):
     return factory
 
 
-def _print_summary(results: list[RotationResult]) -> None:
+def _print_summary(results: list[RotationResult], run_id: Optional[str] = None) -> None:
     rotated = [r for r in results if r.rotated]
     skipped = [r for r in results if not r.rotated and r.error is None and not r.dry_run]
     dry_run_results = [r for r in results if r.dry_run]
@@ -37,6 +39,8 @@ def _print_summary(results: list[RotationResult]) -> None:
     print(f"\n{'='*len(header)}")
     print("Azure SP Secret Rotation — Summary")
     print(f"Run: {datetime.now(tz=timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
+    if run_id:
+        print(f"Run ID: {run_id}")
     print(sep)
     print(header)
     print(sep)
@@ -183,6 +187,12 @@ def main() -> int:
     config = load_config(args.config)
     logger.info("Config loaded from %s — %d SP(s) configured", args.config, len(config.secrets))
 
+    run_id_svc = RunIdService()
+    logger.info(
+        "run_id=%s origin=%s event=%s",
+        run_id_svc.run_id, run_id_svc.origin, run_id_svc.event,
+    )
+
     threshold = args.threshold_days if args.threshold_days is not None else config.main.threshold_days
     validity = args.validity_days if args.validity_days is not None else config.main.validity_days
 
@@ -199,12 +209,13 @@ def main() -> int:
         threshold_days=threshold,
         validity_days=validity,
         dry_run=args.dry_run,
+        run_id=run_id_svc.run_id,
     )
     ownership_checker = OwnershipChecker(graph_client=graph, master_owners=config.main.master_owners, dry_run=args.dry_run)
     runner = ParallelRunner(rotator=rotator, ownership_checker=ownership_checker, max_workers=args.workers)
     rotation_results, ownership_results = runner.run(config.secrets)
 
-    _print_summary(rotation_results)
+    _print_summary(rotation_results, run_id=run_id_svc.run_id)
     _print_ownership_summary(ownership_results)
 
     if not args.no_mail and config.mail:
