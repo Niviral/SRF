@@ -67,7 +67,9 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction
 
+
+      - name: Validate config
+        run: poetry run python main.py --config input.yaml --validate
+
       - name: Run SRF
         run: poetry run python main.py --config input.yaml
-        # No SRF_MASTER_CLIENT_SECRET needed — azure/login sets AZURE_FEDERATED_TOKEN_FILE
-        # which DefaultAzureCredential uses automatically (WorkloadIdentityCredential).

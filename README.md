@@ -76,10 +76,10 @@ poetry run pytest tests\ -v
 ```bash
 python -m venv venv
 # Windows
-.\venv\Scripts\pip install -r requirements.txt
+.\venv\Scripts\pip install azure-identity azure-keyvault-secrets msgraph-sdk pydantic pyyaml jsonschema
 
 # Linux / macOS
-venv/bin/pip install -r requirements.txt
+venv/bin/pip install azure-identity azure-keyvault-secrets msgraph-sdk pydantic pyyaml jsonschema
 ```
 
 ---
@@ -333,7 +333,7 @@ Effective owners for a given SP = `master_owners` ∪ `required_owners` (master 
 poetry install   # installs main + dev deps
 
 # With pip
-.\venv\Scripts\pip install -r requirements.txt -r requirements-dev.txt
+.\venv\Scripts\pip install azure-identity azure-keyvault-secrets msgraph-sdk pydantic pyyaml jsonschema pytest pytest-mock
 ```
 
 ### Run tests
