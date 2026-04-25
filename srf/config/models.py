@@ -12,7 +12,7 @@ class MainConfig(BaseModel):
     tenant_id: str
     master_client_id: Optional[str] = Field(default=None)
     master_keyvault_id: Optional[str] = Field(default=None)
-    master_keyvault_secret_name: Optional[str] = Field(default=None)
+    master_secret_name: Optional[str] = Field(default=None)
     threshold_days: int = Field(default=7, ge=0, le=365)
     validity_days: ValidityDays = Field(default=365)
     master_owners: list[str] = Field(default_factory=list)
@@ -41,7 +41,7 @@ class SecretConfig(BaseModel):
     name: str
     app_id: str
     keyvault_id: str
-    keyvault_secret_name: str
+    secret_name: str
     keyvault_secret_description: Optional[str] = Field(default=None)
     required_owners: list[str] = Field(default_factory=list)
     threshold_days: Optional[int] = Field(default=None, ge=0, le=365)

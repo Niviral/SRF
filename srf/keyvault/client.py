@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import logging
 import re
 
@@ -15,9 +16,13 @@ def parse_keyvault_uri(resource_id: str) -> str:
     Expected format:
     /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{name}
     """
-    match = re.search(r"/providers/Microsoft\.KeyVault/vaults/([^/]+)$", resource_id, re.IGNORECASE)
+    match = re.search(
+        r"/providers/Microsoft\.KeyVault/vaults/([^/]+)$", resource_id, re.IGNORECASE
+    )
     if not match:
-        raise ValueError(f"Cannot parse Key Vault name from resource ID: {resource_id!r}")
+        raise ValueError(
+            f"Cannot parse Key Vault name from resource ID: {resource_id!r}"
+        )
     vault_name = match.group(1)
     return f"https://{vault_name}.vault.azure.net"
 
@@ -46,7 +51,15 @@ class KeyVaultClient:
         logger.info("get_secret OK vault=%s name=%s", self._vault_name, name)
         return value
 
-    def set_secret(self, name: str, value: str, description: str | None = None) -> None:
+    def set_secret(
+        self,
+        name: str,
+        value: str,
+        description: str | None = None,
+        expires_on: datetime | None = None,
+    ) -> None:
         logger.debug("set_secret vault=%s name=%s", self._vault_name, name)
-        self._client.set_secret(name, value, content_type=description)
+        self._client.set_secret(
+            name, value, content_type=description, expires_on=expires_on
+        )
         logger.info("set_secret OK vault=%s name=%s", self._vault_name, name)

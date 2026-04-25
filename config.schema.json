@@ -76,7 +76,7 @@
           "default": null,
           "title": "Master Keyvault Id"
         },
-        "master_keyvault_secret_name": {
+        "master_secret_name": {
           "anyOf": [
             {
               "type": "string"
@@ -133,7 +133,7 @@
           "title": "Keyvault Id",
           "type": "string"
         },
-        "keyvault_secret_name": {
+        "secret_name": {
           "title": "Keyvault Secret Name",
           "type": "string"
         },
@@ -192,7 +192,7 @@
         "name",
         "app_id",
         "keyvault_id",
-        "keyvault_secret_name"
+        "secret_name"
       ],
       "title": "SecretConfig",
       "type": "object"

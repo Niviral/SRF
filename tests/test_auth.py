@@ -5,6 +5,7 @@ Covers all three resolution modes:
   2. Key Vault bootstrap → ClientSecretCredential (managed identity path)
   3. DefaultAzureCredential directly (OIDC / workload identity / az login path)
 """
+
 from __future__ import annotations
 
 import pytest
@@ -20,12 +21,13 @@ from srf.config.models import MainConfig
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_config(**overrides) -> MainConfig:
     defaults = dict(
         tenant_id="tenant-123",
         master_client_id="client-456",
         master_keyvault_id=None,
-        master_keyvault_secret_name=None,
+        secret_name=None,
     )
     defaults.update(overrides)
     return MainConfig(**defaults)
@@ -34,6 +36,7 @@ def _make_config(**overrides) -> MainConfig:
 # ---------------------------------------------------------------------------
 # Mode 1: env var path
 # ---------------------------------------------------------------------------
+
 
 def test_env_var_path_returns_credential(monkeypatch):
     monkeypatch.setenv("SRF_MASTER_CLIENT_SECRET", "my-env-secret")
@@ -57,11 +60,13 @@ def test_env_var_skips_keyvault(monkeypatch):
     monkeypatch.setenv("SRF_MASTER_CLIENT_SECRET", "secret-value")
     config = _make_config(
         master_keyvault_id="/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
-        master_keyvault_secret_name="my-secret",
+        master_secret_name="my-secret",
     )
 
-    with patch("srf.auth.provider.ClientSecretCredential") as mock_csc, \
-         patch("srf.auth.provider.KeyVaultClient") as mock_kv:
+    with (
+        patch("srf.auth.provider.ClientSecretCredential") as mock_csc,
+        patch("srf.auth.provider.KeyVaultClient") as mock_kv,
+    ):
         mock_csc.return_value = MagicMock()
         AuthProvider(config).get_master_credential()
 
@@ -73,11 +78,13 @@ def test_env_var_takes_precedence_over_kv(monkeypatch):
     monkeypatch.setenv("SRF_MASTER_CLIENT_SECRET", "env-wins")
     config = _make_config(
         master_keyvault_id="/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
-        master_keyvault_secret_name="kv-secret",
+        master_secret_name="kv-secret",
     )
 
-    with patch("srf.auth.provider.ClientSecretCredential") as mock_csc, \
-         patch("srf.auth.provider.KeyVaultClient"):
+    with (
+        patch("srf.auth.provider.ClientSecretCredential") as mock_csc,
+        patch("srf.auth.provider.KeyVaultClient"),
+    ):
         mock_csc.return_value = MagicMock()
         AuthProvider(config).get_master_credential()
 
@@ -98,16 +105,19 @@ def test_env_var_without_master_client_id_raises(monkeypatch):
 # Mode 3: Key Vault bootstrap path
 # ---------------------------------------------------------------------------
 
+
 def test_kv_path_reads_secret_and_returns_credential(monkeypatch):
     monkeypatch.delenv("SRF_MASTER_CLIENT_SECRET", raising=False)
     config = _make_config(
         master_keyvault_id="/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/my-kv",
-        master_keyvault_secret_name="master-secret",
+        master_secret_name="master-secret",
     )
 
-    with patch("srf.auth.provider.DefaultAzureCredential") as mock_dac, \
-         patch("srf.auth.provider.KeyVaultClient") as mock_kv_cls, \
-         patch("srf.auth.provider.ClientSecretCredential") as mock_csc:
+    with (
+        patch("srf.auth.provider.DefaultAzureCredential") as mock_dac,
+        patch("srf.auth.provider.KeyVaultClient") as mock_kv_cls,
+        patch("srf.auth.provider.ClientSecretCredential") as mock_csc,
+    ):
         mock_dac.return_value = MagicMock()
         mock_kv_instance = MagicMock()
         mock_kv_instance.get_secret.return_value = "kv-secret-value"
@@ -129,15 +139,19 @@ def test_kv_path_reads_secret_and_returns_credential(monkeypatch):
 
 def test_kv_path_uses_correct_kv_id(monkeypatch):
     monkeypatch.delenv("SRF_MASTER_CLIENT_SECRET", raising=False)
-    kv_id = "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/my-kv"
+    kv_id = (
+        "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/my-kv"
+    )
     config = _make_config(
         master_keyvault_id=kv_id,
-        master_keyvault_secret_name="s",
+        master_secret_name="s",
     )
 
-    with patch("srf.auth.provider.DefaultAzureCredential"), \
-         patch("srf.auth.provider.KeyVaultClient") as mock_kv_cls, \
-         patch("srf.auth.provider.ClientSecretCredential"):
+    with (
+        patch("srf.auth.provider.DefaultAzureCredential"),
+        patch("srf.auth.provider.KeyVaultClient") as mock_kv_cls,
+        patch("srf.auth.provider.ClientSecretCredential"),
+    ):
         mock_kv_cls.return_value = MagicMock()
         mock_kv_cls.return_value.get_secret.return_value = "x"
         AuthProvider(config).get_master_credential()
@@ -152,7 +166,7 @@ def test_kv_path_without_master_client_id_raises(monkeypatch):
     config = _make_config(
         master_client_id=None,
         master_keyvault_id="/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
-        master_keyvault_secret_name="s",
+        master_secret_name="s",
     )
 
     with pytest.raises(RuntimeError, match="master_client_id"):
@@ -162,6 +176,7 @@ def test_kv_path_without_master_client_id_raises(monkeypatch):
 # ---------------------------------------------------------------------------
 # Mode 2: DefaultAzureCredential direct path (OIDC / Workload Identity)
 # ---------------------------------------------------------------------------
+
 
 def test_oidc_path_returns_default_azure_credential(monkeypatch):
     """When neither env var nor KV fields are set, DefaultAzureCredential is returned."""
@@ -182,9 +197,11 @@ def test_oidc_path_does_not_call_kv_or_csc(monkeypatch):
     monkeypatch.delenv("SRF_MASTER_CLIENT_SECRET", raising=False)
     config = MainConfig(tenant_id="tenant-123")
 
-    with patch("srf.auth.provider.DefaultAzureCredential") as mock_dac, \
-         patch("srf.auth.provider.KeyVaultClient") as mock_kv, \
-         patch("srf.auth.provider.ClientSecretCredential") as mock_csc:
+    with (
+        patch("srf.auth.provider.DefaultAzureCredential") as mock_dac,
+        patch("srf.auth.provider.KeyVaultClient") as mock_kv,
+        patch("srf.auth.provider.ClientSecretCredential") as mock_csc,
+    ):
         mock_dac.return_value = MagicMock()
         AuthProvider(config).get_master_credential()
 
@@ -192,10 +209,10 @@ def test_oidc_path_does_not_call_kv_or_csc(monkeypatch):
     mock_csc.assert_not_called()
 
 
-
 # ---------------------------------------------------------------------------
 # Env var path
 # ---------------------------------------------------------------------------
+
 
 def test_env_var_path_returns_credential(monkeypatch):
     monkeypatch.setenv("SRF_MASTER_CLIENT_SECRET", "my-env-secret")
@@ -219,11 +236,13 @@ def test_env_var_skips_keyvault(monkeypatch):
     monkeypatch.setenv("SRF_MASTER_CLIENT_SECRET", "secret-value")
     config = _make_config(
         master_keyvault_id="/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
-        master_keyvault_secret_name="my-secret",
+        master_secret_name="my-secret",
     )
 
-    with patch("srf.auth.provider.ClientSecretCredential") as mock_csc, \
-         patch("srf.auth.provider.KeyVaultClient") as mock_kv:
+    with (
+        patch("srf.auth.provider.ClientSecretCredential") as mock_csc,
+        patch("srf.auth.provider.KeyVaultClient") as mock_kv,
+    ):
         mock_csc.return_value = MagicMock()
         AuthProvider(config).get_master_credential()
 
@@ -235,11 +254,13 @@ def test_env_var_takes_precedence_over_kv(monkeypatch):
     monkeypatch.setenv("SRF_MASTER_CLIENT_SECRET", "env-wins")
     config = _make_config(
         master_keyvault_id="/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
-        master_keyvault_secret_name="kv-secret",
+        master_secret_name="kv-secret",
     )
 
-    with patch("srf.auth.provider.ClientSecretCredential") as mock_csc, \
-         patch("srf.auth.provider.KeyVaultClient"):
+    with (
+        patch("srf.auth.provider.ClientSecretCredential") as mock_csc,
+        patch("srf.auth.provider.KeyVaultClient"),
+    ):
         mock_csc.return_value = MagicMock()
         AuthProvider(config).get_master_credential()
 
@@ -252,16 +273,19 @@ def test_env_var_takes_precedence_over_kv(monkeypatch):
 # Key Vault path
 # ---------------------------------------------------------------------------
 
+
 def test_kv_path_reads_secret_and_returns_credential(monkeypatch):
     monkeypatch.delenv("SRF_MASTER_CLIENT_SECRET", raising=False)
     config = _make_config(
         master_keyvault_id="/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/my-kv",
-        master_keyvault_secret_name="master-secret",
+        master_secret_name="master-secret",
     )
 
-    with patch("srf.auth.provider.DefaultAzureCredential") as mock_dac, \
-         patch("srf.auth.provider.KeyVaultClient") as mock_kv_cls, \
-         patch("srf.auth.provider.ClientSecretCredential") as mock_csc:
+    with (
+        patch("srf.auth.provider.DefaultAzureCredential") as mock_dac,
+        patch("srf.auth.provider.KeyVaultClient") as mock_kv_cls,
+        patch("srf.auth.provider.ClientSecretCredential") as mock_csc,
+    ):
         mock_dac.return_value = MagicMock()
         mock_kv_instance = MagicMock()
         mock_kv_instance.get_secret.return_value = "kv-secret-value"
@@ -283,15 +307,19 @@ def test_kv_path_reads_secret_and_returns_credential(monkeypatch):
 
 def test_kv_path_uses_correct_kv_id(monkeypatch):
     monkeypatch.delenv("SRF_MASTER_CLIENT_SECRET", raising=False)
-    kv_id = "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/my-kv"
+    kv_id = (
+        "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/my-kv"
+    )
     config = _make_config(
         master_keyvault_id=kv_id,
-        master_keyvault_secret_name="s",
+        master_secret_name="s",
     )
 
-    with patch("srf.auth.provider.DefaultAzureCredential"), \
-         patch("srf.auth.provider.KeyVaultClient") as mock_kv_cls, \
-         patch("srf.auth.provider.ClientSecretCredential"):
+    with (
+        patch("srf.auth.provider.DefaultAzureCredential"),
+        patch("srf.auth.provider.KeyVaultClient") as mock_kv_cls,
+        patch("srf.auth.provider.ClientSecretCredential"),
+    ):
         mock_kv_cls.return_value = MagicMock()
         mock_kv_cls.return_value.get_secret.return_value = "x"
         AuthProvider(config).get_master_credential()
@@ -304,18 +332,21 @@ def test_kv_path_uses_correct_kv_id(monkeypatch):
 # Partial config falls through to OIDC mode
 # ---------------------------------------------------------------------------
 
+
 def test_partial_kv_config_falls_through_to_oidc(monkeypatch):
     """Only master_keyvault_id without secret_name → KV fields incomplete →
     falls through to DefaultAzureCredential (OIDC mode)."""
     monkeypatch.delenv("SRF_MASTER_CLIENT_SECRET", raising=False)
     config = _make_config(
         master_keyvault_id="/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
-        # master_keyvault_secret_name intentionally omitted
+        # master_secret_name intentionally omitted
     )
 
-    with patch("srf.auth.provider.DefaultAzureCredential") as mock_dac, \
-         patch("srf.auth.provider.KeyVaultClient") as mock_kv, \
-         patch("srf.auth.provider.ClientSecretCredential") as mock_csc:
+    with (
+        patch("srf.auth.provider.DefaultAzureCredential") as mock_dac,
+        patch("srf.auth.provider.KeyVaultClient") as mock_kv,
+        patch("srf.auth.provider.ClientSecretCredential") as mock_csc,
+    ):
         mock_dac.return_value = MagicMock()
         AuthProvider(config).get_master_credential()
 

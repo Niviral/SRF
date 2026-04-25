@@ -1,4 +1,5 @@
 """Tests for OwnershipChecker."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -16,7 +17,7 @@ def _cfg(required_owners=None):
         name="test-sp",
         app_id="app-id",
         keyvault_id=KV_ID,
-        keyvault_secret_name="test-secret",
+        secret_name="test-secret",
         required_owners=required_owners or [],
     )
 
@@ -133,6 +134,7 @@ def test_skip_when_both_empty():
 # ---------------------------------------------------------------------------
 # dry-run
 # ---------------------------------------------------------------------------
+
 
 def test_dry_run_does_not_call_add_owner():
     graph = MagicMock(spec=GraphClient)

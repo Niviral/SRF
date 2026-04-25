@@ -1,4 +1,5 @@
 """Tests for YAML loading and Pydantic config models."""
+
 from __future__ import annotations
 
 import textwrap
@@ -13,12 +14,12 @@ MINIMAL_YAML = textwrap.dedent("""\
       tenant_id: tid
       master_client_id: cid
       master_keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/kv
-      master_keyvault_secret_name: sec
+      master_secret_name: sec
     secrets:
       - name: sp1
         app_id: app-001
         keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
-        keyvault_secret_name: sp1-secret
+        secret_name: sp1-secret
 """)
 
 FULL_YAML = textwrap.dedent("""\
@@ -26,7 +27,7 @@ FULL_YAML = textwrap.dedent("""\
       tenant_id: tid
       master_client_id: cid
       master_keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/kv
-      master_keyvault_secret_name: sec
+      master_secret_name: sec
     mail:
       smtp_host: smtp.host
       smtp_port: 465
@@ -40,7 +41,7 @@ FULL_YAML = textwrap.dedent("""\
       - name: sp1
         app_id: app-001
         keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
-        keyvault_secret_name: sp1-secret
+        secret_name: sp1-secret
         keyvault_secret_description: "A description"
 """)
 
@@ -100,14 +101,14 @@ def test_threshold_validity_explicit(tmp_path):
           tenant_id: tid
           master_client_id: cid
           master_keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/kv
-          master_keyvault_secret_name: sec
+          master_secret_name: sec
           threshold_days: 14
           validity_days: 180
         secrets:
           - name: sp1
             app_id: app-001
             keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
-            keyvault_secret_name: sp1-secret
+            secret_name: sp1-secret
     """)
     cfg_file = tmp_path / "cfg.yaml"
     cfg_file.write_text(yaml_text)
@@ -120,6 +121,7 @@ def test_threshold_validity_explicit(tmp_path):
 
 def test_default_smtp_port(mail_config):
     from srf.config.models import MailConfig
+
     m = MailConfig(
         smtp_host="h",
         smtp_user="u",
@@ -137,7 +139,7 @@ def test_validity_days_must_exceed_threshold(tmp_path):
           tenant_id: tid
           master_client_id: cid
           master_keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/kv
-          master_keyvault_secret_name: sec
+          master_secret_name: sec
           threshold_days: 30
           validity_days: 30
         secrets: []
@@ -155,7 +157,7 @@ def test_threshold_days_negative_raises(tmp_path):
           tenant_id: tid
           master_client_id: cid
           master_keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/kv
-          master_keyvault_secret_name: sec
+          master_secret_name: sec
           threshold_days: -1
         secrets: []
     """)
@@ -172,7 +174,7 @@ def test_validity_days_invalid_value_raises(tmp_path):
           tenant_id: tid
           master_client_id: cid
           master_keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/kv
-          master_keyvault_secret_name: sec
+          master_secret_name: sec
           validity_days: 200
         secrets: []
     """)
@@ -198,7 +200,7 @@ def test_master_owners_from_yaml(tmp_path):
           tenant_id: tid
           master_client_id: cid
           master_keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/kv
-          master_keyvault_secret_name: sec
+          master_secret_name: sec
           master_owners:
             - 00000000-0000-0000-0000-000000000001
             - 00000000-0000-0000-0000-000000000002
@@ -206,7 +208,7 @@ def test_master_owners_from_yaml(tmp_path):
           - name: sp1
             app_id: app-001
             keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
-            keyvault_secret_name: sp1-secret
+            secret_name: sp1-secret
     """)
     cfg_file = tmp_path / "cfg.yaml"
     cfg_file.write_text(yaml_text)
@@ -227,7 +229,7 @@ def test_per_secret_threshold_and_validity_days(tmp_path):
           - name: sp1
             app_id: app-001
             keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
-            keyvault_secret_name: sp1-secret
+            secret_name: sp1-secret
             threshold_days: 30
             validity_days: 180
     """)
@@ -258,7 +260,7 @@ def test_per_secret_validity_must_exceed_threshold(tmp_path):
           - name: sp1
             app_id: app-001
             keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
-            keyvault_secret_name: sp1-secret
+            secret_name: sp1-secret
             threshold_days: 60
             validity_days: 60
     """)
