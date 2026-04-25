@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import logging
+import os
 import sys
 from datetime import datetime, timezone
 
@@ -12,6 +14,8 @@ from srf.ownership.checker import OwnershipChecker, OwnershipResult
 from srf.reporting.mail import MailReporter
 from srf.rotation.rotator import RotationResult, SecretRotator
 from srf.runner.parallel import ParallelRunner
+
+logger = logging.getLogger(__name__)
 
 
 def _make_kv_factory(credential):
@@ -141,7 +145,29 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="Show what would change without making any writes")
     parser.add_argument("--no-mail", action="store_true", help="Suppress email report even if mail config is present")
     parser.add_argument("--validate", action="store_true", help="Validate input YAML against config.schema.json and exit")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging for SRF modules (overrides SRF_LOG_LEVEL)")
     args = parser.parse_args()
+
+    # Logging level priority: --debug flag > SRF_LOG_LEVEL env var > WARNING default.
+    # Only srf.* loggers are elevated — third-party loggers (azure, msgraph, kiota,
+    # urllib3) stay at WARNING to prevent leaking tokens or request bodies.
+    _ENV_LOG_LEVEL = "LOG_LEVEL"
+    _VALID_LEVELS = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+    if args.debug:
+        log_level = logging.DEBUG
+    else:
+        env_level = os.environ.get(_ENV_LOG_LEVEL, "").upper()
+        if env_level and env_level not in _VALID_LEVELS:
+            print(f"WARNING: invalid {_ENV_LOG_LEVEL}={env_level!r}, expected one of {sorted(_VALID_LEVELS)}. Defaulting to WARNING.", file=sys.stderr)
+            env_level = ""
+        log_level = getattr(logging, env_level) if env_level else logging.WARNING
+    logging.basicConfig(
+        level=logging.WARNING,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        force=True,
+    )
+    logging.getLogger("srf").setLevel(log_level)
+    logging.getLogger(__name__).setLevel(log_level)
 
     if args.validate:
         import json
@@ -161,12 +187,14 @@ def main() -> int:
         sys.exit(0)
 
     config = load_config(args.config)
+    logger.info("Config loaded from %s — %d SP(s) configured", args.config, len(config.secrets))
 
     threshold = args.threshold_days if args.threshold_days is not None else config.main.threshold_days
     validity = args.validity_days if args.validity_days is not None else config.main.validity_days
 
     auth = AuthProvider(config.main)
     master_credential = auth.get_master_credential()
+    logger.info("Starting rotation run: dry_run=%s, threshold_days=%s, validity_days=%s", args.dry_run, threshold, validity)
 
     graph = GraphClient(credential=master_credential)
     kv_factory = _make_kv_factory(master_credential)
