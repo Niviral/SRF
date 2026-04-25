@@ -28,13 +28,9 @@ Examples:
 
 ### Workflow
 
-> ⚠️ **Always start a new branch from an up-to-date `master`.**  
-> Never branch from another feature branch or from a stale local `master`.
-
 ```
-# 1. Update master first, then branch
-git checkout master
-git pull origin master
+# 1. Branch off master
+git checkout master && git pull
 git checkout -b feature/my-feature
 
 # 2. Make changes, commit
