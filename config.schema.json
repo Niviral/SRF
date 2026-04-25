@@ -90,11 +90,18 @@
         },
         "threshold_days": {
           "default": 7,
+          "maximum": 365,
+          "minimum": 0,
           "title": "Threshold Days",
           "type": "integer"
         },
         "validity_days": {
           "default": 365,
+          "enum": [
+            90,
+            180,
+            365
+          ],
           "title": "Validity Days",
           "type": "integer"
         },
@@ -148,6 +155,37 @@
           },
           "title": "Required Owners",
           "type": "array"
+        },
+        "threshold_days": {
+          "anyOf": [
+            {
+              "maximum": 365,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Threshold Days"
+        },
+        "validity_days": {
+          "anyOf": [
+            {
+              "enum": [
+                90,
+                180,
+                365
+              ],
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Validity Days"
         }
       },
       "required": [
