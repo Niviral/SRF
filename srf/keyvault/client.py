@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import re
 
+from azure.core.exceptions import ResourceNotFoundError
 from azure.keyvault.secrets import SecretClient
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,17 @@ class KeyVaultClient:
         self._vault_name = vault_uri.split("//")[1].split(".")[0]
         self._client = SecretClient(vault_url=vault_uri, credential=credential)
         logger.debug("KeyVaultClient initialised for vault=%s", self._vault_name)
+
+    def secret_exists(self, name: str) -> bool:
+        """Return True if the secret exists and is not deleted/purged."""
+        logger.debug("secret_exists vault=%s name=%s", self._vault_name, name)
+        try:
+            self._client.get_secret(name)
+            logger.debug("secret_exists=True vault=%s name=%s", self._vault_name, name)
+            return True
+        except ResourceNotFoundError:
+            logger.info("secret not found vault=%s name=%s", self._vault_name, name)
+            return False
 
     def get_secret(self, name: str) -> str:
         logger.debug("get_secret vault=%s name=%s", self._vault_name, name)

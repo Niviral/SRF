@@ -86,3 +86,34 @@ def test_set_secret_with_description(monkeypatch):
     client.set_secret("k", "v", description="My description")
 
     assert calls["content_type"] == "My description"
+
+
+def test_secret_exists_returns_true(monkeypatch):
+    class FakeSecret:
+        value = "v"
+
+    class FakeSecretClient:
+        def __init__(self, vault_url, credential):
+            pass
+
+        def get_secret(self, name):
+            return FakeSecret()
+
+    monkeypatch.setattr("srf.keyvault.client.SecretClient", FakeSecretClient)
+    client = KeyVaultClient(credential=object(), keyvault_id=KV_ID)
+    assert client.secret_exists("my-secret") is True
+
+
+def test_secret_exists_returns_false_when_not_found(monkeypatch):
+    from azure.core.exceptions import ResourceNotFoundError
+
+    class FakeSecretClient:
+        def __init__(self, vault_url, credential):
+            pass
+
+        def get_secret(self, name):
+            raise ResourceNotFoundError("not found")
+
+    monkeypatch.setattr("srf.keyvault.client.SecretClient", FakeSecretClient)
+    client = KeyVaultClient(credential=object(), keyvault_id=KV_ID)
+    assert client.secret_exists("missing-secret") is False

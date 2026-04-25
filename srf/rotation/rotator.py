@@ -27,6 +27,7 @@ class RotationResult:
     dry_run: bool = field(default=False)
     rotation_needed: bool = field(default=False)
     cleanup_warnings: list[str] = field(default_factory=list)
+    kv_secret_missing: bool = field(default=False)
 
 
 def _vault_name_from_id(keyvault_id: str) -> str:
@@ -108,10 +109,21 @@ class SecretRotator:
             credentials = self._graph.list_password_credentials(secret_config.app_id)
             was_created = len(credentials) == 0
             should_rotate, current_expiry = self.needs_rotation(credentials, threshold=eff_threshold)
+            kv_secret_missing = False
             logger.debug(
                 "[%s] credentials=%d should_rotate=%s current_expiry=%s",
                 secret_config.name, len(credentials), should_rotate, current_expiry,
             )
+
+            if not should_rotate:
+                logger.debug("[%s] checking KV secret existence before skipping", secret_config.name)
+                kv = self._kv_factory(secret_config.keyvault_id)
+                if not kv.secret_exists(secret_config.keyvault_secret_name):
+                    logger.info("[%s] KV secret missing — forcing rotation despite valid SP credential", secret_config.name)
+                    should_rotate = True
+                    kv_secret_missing = True
+                else:
+                    kv_secret_missing = False
 
             if not should_rotate:
                 logger.info("[%s] skipping — not expiring within threshold", secret_config.name)
@@ -134,7 +146,7 @@ class SecretRotator:
                 )
 
             if self._dry_run:
-                logger.info("[%s] dry-run: would rotate (was_created=%s)", secret_config.name, was_created)
+                logger.info("[%s] dry-run: would rotate (was_created=%s kv_secret_missing=%s)", secret_config.name, was_created, kv_secret_missing)
                 return RotationResult(
                     name=secret_config.name,
                     app_id=secret_config.app_id,
@@ -144,9 +156,10 @@ class SecretRotator:
                     was_created=was_created,
                     current_expiry=current_expiry,
                     keyvault_name=vault_name,
+                    kv_secret_missing=kv_secret_missing,
                 )
 
-            logger.info("[%s] rotating secret (was_created=%s)", secret_config.name, was_created)
+            logger.info("[%s] rotating secret (was_created=%s kv_secret_missing=%s)", secret_config.name, was_created, kv_secret_missing)
             new_cred = self._graph.add_password_credential(
                 app_id=secret_config.app_id,
                 display_name=f"rotated-by-srf",
@@ -187,6 +200,7 @@ class SecretRotator:
                 keyvault_name=vault_name,
                 was_created=was_created,
                 cleanup_warnings=cleanup_warnings,
+                kv_secret_missing=kv_secret_missing,
             )
 
         except Exception as exc:

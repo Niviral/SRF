@@ -93,12 +93,60 @@ def test_rotate_skipped_when_not_expiring():
     graph = MagicMock()
     graph.list_password_credentials.return_value = [_cred(30)]
 
-    rotator = _make_rotator(graph, MagicMock())
+    kv = MagicMock()
+    kv.secret_exists.return_value = True
+    rotator = _make_rotator(graph, kv)
     result = rotator.rotate(_make_secret_cfg())
 
     assert result.rotated is False
     assert result.error is None
     assert result.keyvault_name == "sp-kv"
+    assert result.kv_secret_missing is False
+
+
+def test_rotate_forced_when_kv_secret_missing():
+    """If the SP credential is valid but the KV secret is missing, rotation must be forced."""
+    new_cred = MagicMock()
+    new_cred.key_id = "key-new"
+    new_cred.secret_text = "s"
+    new_cred.end_date_time = NOW + timedelta(days=365)
+
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = [_cred(30)]  # not expiring
+    graph.add_password_credential.return_value = new_cred
+
+    kv = MagicMock()
+    kv.secret_exists.return_value = False  # KV secret missing
+
+    rotator = _make_rotator(graph, kv)
+    result = rotator.rotate(_make_secret_cfg())
+
+    assert result.rotated is True
+    assert result.kv_secret_missing is True
+    kv.set_secret.assert_called_once()
+
+
+def test_dry_run_reports_kv_secret_missing():
+    """Dry-run should report kv_secret_missing=True without writing."""
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = [_cred(30)]  # not expiring
+
+    kv = MagicMock()
+    kv.secret_exists.return_value = False
+
+    rotator = SecretRotator(
+        graph_client=graph,
+        keyvault_client_factory=lambda _: kv,
+        dry_run=True,
+    )
+    result = rotator.rotate(_make_secret_cfg())
+
+    assert result.rotated is False
+    assert result.dry_run is True
+    assert result.rotation_needed is True
+    assert result.kv_secret_missing is True
+    graph.add_password_credential.assert_not_called()
+    kv.set_secret.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
