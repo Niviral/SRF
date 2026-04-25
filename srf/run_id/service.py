@@ -148,11 +148,13 @@ class RunIdService:
         event_code  = (i >> 58) & 0x7
         run_id_raw  = (i >> 21) & 0x1FFFFFFFFF
 
+        origin = "github_actions" if origin_bit else "cli"
+        event  = _EVENT_NAMES.get(event_code, "other") if origin_bit else "cli"
         return RunIdInfo(
             version      = version,
             timestamp_ms = ts_ms,
             datetime_utc = datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc),
-            origin       = "github_actions" if origin_bit else "cli",
-            event        = _EVENT_NAMES.get(event_code, "other"),
+            origin       = origin,
+            event        = event,
             github_run_id= run_id_raw if origin_bit else None,
         )
