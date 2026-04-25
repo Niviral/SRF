@@ -21,4 +21,3 @@ build-backend = "poetry.core.masonry.api"
 
 [dependency-groups]
 dev = ["pytest (>=8.3.0)", "pytest-mock (>=3.14.0)"]
-codespace = ["azure-cli (>=2.85.0)"]
