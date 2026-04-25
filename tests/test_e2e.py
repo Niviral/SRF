@@ -2,6 +2,7 @@
 
 All Azure SDK calls are monkeypatched; no subprocess, no real network traffic.
 """
+
 from __future__ import annotations
 
 import sys
@@ -21,14 +22,14 @@ main:
   tenant_id: "tenant-abc"
   master_client_id: "master-app-id"
   master_keyvault_id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/myvault"
-  master_keyvault_secret_name: "master-secret"
+  master_secret_name: "master-secret"
   threshold_days: 7
   validity_days: 365
 secrets:
   - name: "sp-test"
     app_id: "app-id-123"
     keyvault_id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/myvault"
-    keyvault_secret_name: "sp-test-secret"
+    secret_name: "sp-test-secret"
 """
 
 # YAML without KV fields — relies on SRF_MASTER_CLIENT_SECRET env var
@@ -42,7 +43,7 @@ secrets:
   - name: "sp-test"
     app_id: "app-id-123"
     keyvault_id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/myvault"
-    keyvault_secret_name: "sp-test-secret"
+    secret_name: "sp-test-secret"
 """
 
 # mail block using exact Pydantic field names from MailConfig
@@ -63,18 +64,19 @@ main:
   tenant_x: "bad"
   master_client_id: "master-app-id"
   master_keyvault_id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/myvault"
-  master_keyvault_secret_name: "master-secret"
+  master_secret_name: "master-secret"
 secrets:
   - name: "sp-test"
     app_id: "app-id-123"
     keyvault_id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/myvault"
-    keyvault_secret_name: "sp-test-secret"
+    secret_name: "sp-test-secret"
 """
 
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def minimal_yaml(tmp_path):
@@ -132,7 +134,9 @@ def mock_azure(monkeypatch):
         "srf.graph.client.GraphClient.list_password_credentials",
         lambda self, app_id: [mock_cred],
     )
-    monkeypatch.setattr("srf.graph.client.GraphClient.add_password_credential", add_password)
+    monkeypatch.setattr(
+        "srf.graph.client.GraphClient.add_password_credential", add_password
+    )
     monkeypatch.setattr(
         "srf.graph.client.GraphClient.remove_password_credential",
         lambda self, *a, **kw: None,
@@ -167,6 +171,7 @@ def mock_azure(monkeypatch):
 # Tests — --validate flag
 # ---------------------------------------------------------------------------
 
+
 def test_validate_valid_config(tmp_path, monkeypatch, capsys):
     p = tmp_path / "valid.yaml"
     p.write_text(_BASE_YAML)
@@ -191,8 +196,11 @@ def test_validate_invalid_config(tmp_path, monkeypatch, capsys):
 # Tests — --dry-run flag
 # ---------------------------------------------------------------------------
 
+
 def test_dry_run_no_writes(minimal_yaml, mock_azure, monkeypatch, capsys):
-    monkeypatch.setattr(sys, "argv", ["srf", "--config", str(minimal_yaml), "--dry-run"])
+    monkeypatch.setattr(
+        sys, "argv", ["srf", "--config", str(minimal_yaml), "--dry-run"]
+    )
     main.main()
     assert not mock_azure["add_password_credential"].called
     assert not mock_azure["set_secret"].called
@@ -201,7 +209,9 @@ def test_dry_run_no_writes(minimal_yaml, mock_azure, monkeypatch, capsys):
 
 
 def test_dry_run_output_contains_summary(minimal_yaml, mock_azure, monkeypatch, capsys):
-    monkeypatch.setattr(sys, "argv", ["srf", "--config", str(minimal_yaml), "--dry-run"])
+    monkeypatch.setattr(
+        sys, "argv", ["srf", "--config", str(minimal_yaml), "--dry-run"]
+    )
     main.main()
     out = capsys.readouterr().out
     assert "~ WOULD" in out or "NO CHANGE" in out
@@ -211,8 +221,11 @@ def test_dry_run_output_contains_summary(minimal_yaml, mock_azure, monkeypatch, 
 # Tests — --no-mail flag
 # ---------------------------------------------------------------------------
 
+
 def test_no_mail_suppresses_send(yaml_with_mail, mock_azure, monkeypatch):
-    monkeypatch.setattr(sys, "argv", ["srf", "--config", str(yaml_with_mail), "--no-mail"])
+    monkeypatch.setattr(
+        sys, "argv", ["srf", "--config", str(yaml_with_mail), "--no-mail"]
+    )
     main.main()
     assert not mock_azure["send_report"].called
 
@@ -227,9 +240,11 @@ def test_mail_sent_without_no_mail(yaml_with_mail, mock_azure, monkeypatch):
 # Tests — combined flags
 # ---------------------------------------------------------------------------
 
+
 def test_dry_run_and_no_mail_combined(yaml_with_mail, mock_azure, monkeypatch):
     monkeypatch.setattr(
-        sys, "argv",
+        sys,
+        "argv",
         ["srf", "--config", str(yaml_with_mail), "--dry-run", "--no-mail"],
     )
     main.main()
@@ -241,6 +256,7 @@ def test_dry_run_and_no_mail_combined(yaml_with_mail, mock_azure, monkeypatch):
 # ---------------------------------------------------------------------------
 # Tests — SRF_MASTER_CLIENT_SECRET env var auth path
 # ---------------------------------------------------------------------------
+
 
 def test_env_var_auth_skips_keyvault(no_kv_yaml, mock_azure, monkeypatch):
     """When SRF_MASTER_CLIENT_SECRET is set, no KV bootstrap is needed."""
@@ -263,11 +279,15 @@ def test_no_auth_source_uses_oidc_fallback(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(sys, "argv", ["srf", "--config", str(p)])
 
     # Patch DefaultAzureCredential to prevent real network calls
-    with patch("srf.auth.provider.DefaultAzureCredential") as mock_dac, \
-         patch("srf.graph.client.GraphClient.__init__", lambda self, *a, **kw: None), \
-         patch("srf.graph.client.GraphClient.list_password_credentials",
-               lambda self, app_id: (_ for _ in ()).throw(RuntimeError("no token"))), \
-         patch("srf.graph.client.GraphClient.list_owners", lambda self, app_id: []):
+    with (
+        patch("srf.auth.provider.DefaultAzureCredential") as mock_dac,
+        patch("srf.graph.client.GraphClient.__init__", lambda self, *a, **kw: None),
+        patch(
+            "srf.graph.client.GraphClient.list_password_credentials",
+            lambda self, app_id: (_ for _ in ()).throw(RuntimeError("no token")),
+        ),
+        patch("srf.graph.client.GraphClient.list_owners", lambda self, app_id: []),
+    ):
         mock_dac.return_value = MagicMock()
         result = main.main()
 

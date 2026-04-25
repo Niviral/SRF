@@ -31,7 +31,7 @@ class AuthProvider:
         ``master_client_id`` in YAML is optional — ``AZURE_CLIENT_ID`` env var is used instead.
 
     **Mode 3 — Key Vault bootstrap** (for environments with a pre-existing managed identity)
-        Provide ``master_keyvault_id`` + ``master_keyvault_secret_name`` in the YAML.
+        Provide ``master_keyvault_id`` + ``master_secret_name`` in the YAML.
         ``DefaultAzureCredential`` reads the master SP secret from that Key Vault, then
         creates a ``ClientSecretCredential``.  Only use when the *host* already has an
         identity (Managed Identity, ``az login``) that can reach the Key Vault — otherwise
@@ -51,7 +51,11 @@ class AuthProvider:
                 raise RuntimeError(
                     f"{_ENV_VAR!r} is set but 'master_client_id' is missing from the YAML config."
                 )
-            logger.info("Auth mode 1: ClientSecretCredential via %s env var (client_id=%s)", _ENV_VAR, self._config.master_client_id)
+            logger.info(
+                "Auth mode 1: ClientSecretCredential via %s env var (client_id=%s)",
+                _ENV_VAR,
+                self._config.master_client_id,
+            )
             return ClientSecretCredential(
                 tenant_id=self._config.tenant_id,
                 client_id=self._config.master_client_id,
@@ -61,18 +65,22 @@ class AuthProvider:
         # ------------------------------------------------------------------ #
         # Mode 3: Key Vault bootstrap (requires host identity for KV access)  #
         # ------------------------------------------------------------------ #
-        if self._config.master_keyvault_id and self._config.master_keyvault_secret_name:
+        if self._config.master_keyvault_id and self._config.master_secret_name:
             if not self._config.master_client_id:
                 raise RuntimeError(
                     "Key Vault bootstrap requires 'master_client_id' in the YAML config."
                 )
-            logger.info("Auth mode 3: Key Vault bootstrap (keyvault=%s, client_id=%s)", self._config.master_keyvault_id, self._config.master_client_id)
+            logger.info(
+                "Auth mode 3: Key Vault bootstrap (keyvault=%s, client_id=%s)",
+                self._config.master_keyvault_id,
+                self._config.master_client_id,
+            )
             bootstrap_credential = DefaultAzureCredential()
             kv = KeyVaultClient(
                 credential=bootstrap_credential,
                 keyvault_id=self._config.master_keyvault_id,
             )
-            kv_secret = kv.get_secret(self._config.master_keyvault_secret_name)
+            kv_secret = kv.get_secret(self._config.master_secret_name)
             return ClientSecretCredential(
                 tenant_id=self._config.tenant_id,
                 client_id=self._config.master_client_id,
@@ -87,6 +95,7 @@ class AuthProvider:
         #   - Local: az login session
         #   - Azure compute: Managed Identity
         # No client secret is required; Azure handles token exchange.
-        logger.info("Auth mode 2: DefaultAzureCredential (OIDC / az login / Managed Identity)")
+        logger.info(
+            "Auth mode 2: DefaultAzureCredential (OIDC / az login / Managed Identity)"
+        )
         return DefaultAzureCredential()
-
