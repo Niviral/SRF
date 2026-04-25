@@ -230,3 +230,44 @@ def test_two_instances_have_different_run_ids():
     # Very unlikely to collide (12 + 21 random bits); test would be flaky only
     # if secrets.randbits returns identical values twice in a row.
     assert svc1.run_id != svc2.run_id
+
+
+# ─── CLI decode entrypoint ────────────────────────────────────────────────────
+
+
+def test_main_decode_cli_run(capsys):
+    from unittest.mock import patch as _patch
+    import sys
+    with _patch.object(sys, "argv", ["main.py", "decode", "019dc4f8-3611-806b-8000-0000000d03cb"]):
+        from main import main
+        rc = main()
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "cli" in out
+    assert "2026-04-25" in out
+    assert "N/A (CLI run)" in out
+
+
+def test_main_decode_gha_run(capsys):
+    from unittest.mock import patch as _patch
+    import sys
+    with _patch.object(sys, "argv", ["main.py", "decode", "019dc4f8-3611-806b-a06e-0486e00d03cb"]):
+        from main import main
+        rc = main()
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "github_actions" in out
+    assert "schedule" in out
+    assert "14766323456" in out
+    assert "actions/runs/14766323456" in out
+
+
+def test_main_decode_invalid_uuid(capsys):
+    from unittest.mock import patch as _patch
+    import sys
+    with _patch.object(sys, "argv", ["main.py", "decode", "not-a-uuid"]):
+        from main import main
+        rc = main()
+    err = capsys.readouterr().err
+    assert rc == 1
+    assert "not a valid SRF run ID" in err
