@@ -8,10 +8,12 @@ A Python CLI tool that automates rotation of Azure Service Principal (SP) client
 
 - **Secret rotation** — detects secrets expiring within a configurable threshold (default: 7 days) and rotates them automatically via the Microsoft Graph API
 - **Key Vault storage** — saves each new secret value to a per-SP Azure Key Vault (referenced by ARM resource ID)
+- **Old credential cleanup** — optionally removes previous SP credentials from Azure AD after rotation (`cleanup_old_secrets`, default off)
 - **Owner verification** — ensures specified Azure AD users are owners of each SP application registration; adds any that are missing (never removes)
 - **Global master owners** — a single list of owners applied to *every* SP, merged with per-SP `required_owners`
 - **Email report** — sends an HTML + plain-text summary email after each run (optional)
 - **Parallel execution** — rotation and ownership checks run concurrently across all SPs
+- **Run ID tracing** — every run generates a UUID v8 run identifier printed to stdout and embedded in Azure AD credential names for traceability; decode with `main.py decode <run-id>`
 - **Composition-style design** — each component is injected as a dependency, making it easy to extend (e.g. add Service Connection rotation)
 
 ---
@@ -184,6 +186,9 @@ main:
   threshold_days: 7     # rotate if secret expires within this many days
   validity_days: 365    # validity period for newly created secrets
 
+  # Set to true to delete old SP credentials from Azure AD after rotation (default: false)
+  # cleanup_old_secrets: false
+
   # Users added as owner to EVERY SP (by Azure AD user object ID)
   master_owners:
     - 00000000-0000-0000-0000-000000000001
@@ -212,6 +217,10 @@ secrets:
     # Users added as owner for THIS SP only (merged with master_owners)
     required_owners:
       - 00000000-0000-0000-0000-000000000002
+
+    # Per-SP overrides (both optional — fall back to main section values)
+    # threshold_days: 14
+    # validity_days: 180
 ```
 
 ### Config reference
@@ -225,8 +234,9 @@ secrets:
 | `master_keyvault_id` | | `null` | ARM resource ID of the Key Vault holding the master SP secret (required if `SRF_MASTER_CLIENT_SECRET` is not set) |
 | `master_secret_name` | | `null` | Secret name inside that Key Vault (required if `SRF_MASTER_CLIENT_SECRET` is not set) |
 | `threshold_days` | | `7` | Rotate if expiry is within this many days |
-| `validity_days` | | `365` | New secret validity in days |
+| `validity_days` | | `365` | New secret validity in days (`90`, `180`, or `365`) |
 | `master_owners` | | `[]` | User object IDs added as owner to every SP |
+| `cleanup_old_secrets` | | `false` | Delete old SP credentials from Azure AD after rotation |
 
 #### `secrets[]` entries
 
@@ -238,6 +248,8 @@ secrets:
 | `secret_name` | ✅ | — | Secret name to create/overwrite in that Key Vault |
 | `keyvault_secret_description` | | `null` | Stored as `content_type` on the KV secret |
 | `required_owners` | | `[]` | User object IDs added as owner for this SP only |
+| `threshold_days` | | `null` | Override global `threshold_days` for this SP only |
+| `validity_days` | | `null` | Override global `validity_days` for this SP only (`90`, `180`, or `365`) |
 
 #### `mail` section (optional)
 
@@ -262,13 +274,20 @@ poetry run python main.py --config /path/to/config.yaml --threshold-days 14
 
 # With venv directly
 python main.py
-```
 
 # Override rotation threshold and validity for this run
 python main.py --threshold-days 14 --validity-days 180
 
 # Increase parallelism
 python main.py --workers 10
+```
+
+### Decode a Run ID
+
+Every run prints a UUID v8 Run ID to stdout. Use the `decode` subcommand to inspect it:
+
+```bash
+poetry run python main.py decode 018f1a2b-3c4d-8e5f-a6b7-c8d9e0f1a2b3
 ```
 
 ### CLI flags
@@ -317,6 +336,7 @@ The tool prints two summary tables to stdout:
 ================================================================
 Azure SP Secret Rotation — Summary
 Run: 2026-04-18 08:30 UTC
+Run ID: 018f1a2b-3c4d-8e5f-a6b7-c8d9e0f1a2b3
 ----------------------------------------------------------------
 NAME                 APP ID                                 STATUS                     EXPIRY                     DETAIL
 ----------------------------------------------------------------
@@ -371,7 +391,7 @@ poetry run pytest tests\ -v
 .\venv\Scripts\pytest tests\ -v
 ```
 
-56 tests covering: config validation, Key Vault client, Graph API client, rotation expiry logic, parallel runner error isolation, ownership checker, and email report generation. All Azure SDK calls are monkeypatched — no real Azure credentials required.
+128 tests covering: config validation, Key Vault client, Graph API client, rotation expiry logic, cleanup flag, parallel runner error isolation, ownership checker, email report generation, and Run ID encoding/decoding. All Azure SDK calls are monkeypatched — no real Azure credentials required.
 
 ### Project structure
 
@@ -384,7 +404,8 @@ srf/
 ├── rotation/rotator.py    SecretRotator, RotationResult
 ├── ownership/checker.py   OwnershipChecker, OwnershipResult
 ├── runner/parallel.py     ParallelRunner
-└── reporting/mail.py      MailReporter
+├── reporting/mail.py      MailReporter
+└── run_id/service.py      RunIdService — UUID v8 run identifier generation + decode
 tests/
 ├── conftest.py
 ├── test_config.py
@@ -393,7 +414,8 @@ tests/
 ├── test_rotator.py
 ├── test_ownership.py
 ├── test_runner.py
-└── test_mail.py
+├── test_mail.py
+└── test_run_id.py
 ```
 
 ---
