@@ -64,9 +64,16 @@ jobs:
           version: "2.3.4"
           virtualenvs-in-project: true
 
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-${{ matrix.python-version }}-
+
       - name: Install dependencies
         run: poetry install --no-interaction
-
 
       - name: Validate config
         run: poetry run python main.py --config input.yaml --validate
