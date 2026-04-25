@@ -1,4 +1,4 @@
-# SRF — Service Principal Secret Rotation Framework
+# AzureSecretRotationFramework 
 
 A Python CLI tool that automates rotation of Azure Service Principal (SP) client secrets and verification of SP application owners, driven entirely by a YAML configuration file.
 
@@ -88,7 +88,7 @@ venv/bin/pip install azure-identity azure-keyvault-secrets msgraph-sdk pydantic 
 
 ## Authentication
 
-SRF needs to authenticate as the **master SP** to call the Microsoft Graph API.  
+AzureSecretRotationFramework needs to authenticate as the **master SP** to call the Microsoft Graph API.  
 Three modes are supported — pick the one that fits your setup:
 
 ---
@@ -125,7 +125,7 @@ The secret is masked in all logs; never written to disk or visible in process li
 
 ```yaml
 # In your workflow:
-- name: Run SRF
+- name: Run AzureSecretRotationFramework
   env:
     SRF_MASTER_CLIENT_SECRET: ${{ secrets.MASTER_SP_SECRET }}
   run: python main.py
@@ -212,7 +212,7 @@ secrets:
     # Key Vault where the rotated secret value will be stored
     keyvault_id: /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<kv-name>
     secret_name: my-service-sp-secret
-    keyvault_secret_description: "Managed by SRF"   # optional, stored as KV content_type
+    keyvault_secret_description: "Managed by AzureSecretRotationFramework"   # optional, stored as KV content_type
 
     # Users added as owner for THIS SP only (merged with master_owners)
     required_owners:
@@ -301,7 +301,7 @@ poetry run python main.py decode 018f1a2b-3c4d-8e5f-a6b7-c8d9e0f1a2b3
 | `--dry-run` | off | Show what would change without making any writes |
 | `--no-mail` | off | Suppress email report even if mail config is present |
 | `--validate` | off | Validate `input.yaml` against the JSON schema and exit |
-| `--debug` | off | Enable `DEBUG` logging for SRF modules (overrides `LOG_LEVEL`) |
+| `--debug` | off | Enable `DEBUG` logging for AzureSecretRotationFramework modules (overrides `LOG_LEVEL`) |
 
 > CLI flags always take precedence over YAML values when explicitly provided.
 
