@@ -6,7 +6,8 @@
     "ghcr.io/devcontainers-contrib/features/poetry:2": {
       "version": "2.3.4"
     },
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/azure-cli:1": {}
   },
 
   "postCreateCommand": "poetry install --no-interaction && gh extension install github/gh-copilot",
