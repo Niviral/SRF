@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: poetry run pytest tests/ -v -W ignore::DeprecationWarning --tb=short --ignore=tests/test_e2e.py
+        language: system
+        pass_filenames: false
+        always_run: true
