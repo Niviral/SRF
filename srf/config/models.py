@@ -42,6 +42,18 @@ class SecretConfig(BaseModel):
     keyvault_secret_name: str
     keyvault_secret_description: Optional[str] = Field(default=None)
     required_owners: list[str] = Field(default_factory=list)
+    threshold_days: Optional[int] = Field(default=None, ge=0, le=365)
+    validity_days: Optional[int] = Field(default=None, ge=1, le=730)
+
+    @model_validator(mode="after")
+    def _validity_exceeds_threshold(self) -> "SecretConfig":
+        if self.validity_days is not None and self.threshold_days is not None:
+            if self.validity_days <= self.threshold_days:
+                raise ValueError(
+                    f"validity_days ({self.validity_days}) must be greater than "
+                    f"threshold_days ({self.threshold_days})"
+                )
+        return self
 
 
 class AppConfig(BaseModel):

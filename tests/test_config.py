@@ -217,3 +217,53 @@ def test_master_owners_from_yaml(tmp_path):
         "00000000-0000-0000-0000-000000000001",
         "00000000-0000-0000-0000-000000000002",
     ]
+
+
+def test_per_secret_threshold_and_validity_days(tmp_path):
+    yaml_text = textwrap.dedent("""\
+        main:
+          tenant_id: tid
+        secrets:
+          - name: sp1
+            app_id: app-001
+            keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
+            keyvault_secret_name: sp1-secret
+            threshold_days: 30
+            validity_days: 180
+    """)
+    cfg_file = tmp_path / "cfg.yaml"
+    cfg_file.write_text(yaml_text)
+
+    cfg = load_config(str(cfg_file))
+
+    assert cfg.secrets[0].threshold_days == 30
+    assert cfg.secrets[0].validity_days == 180
+
+
+def test_per_secret_defaults_are_none(tmp_path):
+    cfg_file = tmp_path / "cfg.yaml"
+    cfg_file.write_text(MINIMAL_YAML)
+
+    cfg = load_config(str(cfg_file))
+
+    assert cfg.secrets[0].threshold_days is None
+    assert cfg.secrets[0].validity_days is None
+
+
+def test_per_secret_validity_must_exceed_threshold(tmp_path):
+    yaml_text = textwrap.dedent("""\
+        main:
+          tenant_id: tid
+        secrets:
+          - name: sp1
+            app_id: app-001
+            keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
+            keyvault_secret_name: sp1-secret
+            threshold_days: 60
+            validity_days: 60
+    """)
+    cfg_file = tmp_path / "bad.yaml"
+    cfg_file.write_text(yaml_text)
+
+    with pytest.raises(Exception, match="validity_days"):
+        load_config(str(cfg_file))

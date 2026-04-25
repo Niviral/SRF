@@ -58,8 +58,9 @@ class SecretRotator:
 
     # ------------------------------------------------------------------
 
-    def needs_rotation(self, credentials: list[PasswordCredential]) -> tuple[bool, Optional[datetime]]:
+    def needs_rotation(self, credentials: list[PasswordCredential], threshold: Optional[timedelta] = None) -> tuple[bool, Optional[datetime]]:
         """Return (needs_rotation, soonest_expiry) for the credential set."""
+        effective_threshold = threshold if threshold is not None else self._threshold
         if not credentials:
             return True, None
 
@@ -76,7 +77,7 @@ class SecretRotator:
                 expiry = expiry.replace(tzinfo=timezone.utc)
             if soonest is None or expiry < soonest:
                 soonest = expiry
-            if expiry <= now + self._threshold:
+            if expiry <= now + effective_threshold:
                 return True, soonest
 
         return False, soonest
@@ -85,10 +86,20 @@ class SecretRotator:
 
     def rotate(self, secret_config: SecretConfig) -> RotationResult:
         vault_name = _vault_name_from_id(secret_config.keyvault_id)
+        eff_threshold = (
+            timedelta(days=secret_config.threshold_days)
+            if secret_config.threshold_days is not None
+            else self._threshold
+        )
+        eff_validity = (
+            secret_config.validity_days
+            if secret_config.validity_days is not None
+            else self._validity_days
+        )
         try:
             credentials = self._graph.list_password_credentials(secret_config.app_id)
             was_created = len(credentials) == 0
-            should_rotate, current_expiry = self.needs_rotation(credentials)
+            should_rotate, current_expiry = self.needs_rotation(credentials, threshold=eff_threshold)
 
             if not should_rotate:
                 if self._dry_run:
@@ -124,7 +135,7 @@ class SecretRotator:
             new_cred = self._graph.add_password_credential(
                 app_id=secret_config.app_id,
                 display_name=f"rotated-by-srf",
-                validity_days=self._validity_days,
+                validity_days=eff_validity,
             )
 
             kv = self._kv_factory(secret_config.keyvault_id)

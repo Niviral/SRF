@@ -303,3 +303,108 @@ def test_dry_run_was_created_true_no_prior_creds():
     assert result.was_created is True
     graph.add_password_credential.assert_not_called()
     kv.set_secret.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# per-secret threshold_days / validity_days overrides
+# ---------------------------------------------------------------------------
+
+def test_per_secret_threshold_triggers_earlier_rotation():
+    """Secret with threshold_days=20 should rotate a cred expiring in 15 days."""
+    new_cred = MagicMock()
+    new_cred.key_id = "key-new"
+    new_cred.secret_text = "s"
+    new_cred.end_date_time = NOW + timedelta(days=365)
+
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = [_cred(15)]  # outside global 7-day threshold
+    graph.add_password_credential.return_value = new_cred
+
+    rotator = _make_rotator(graph, MagicMock())
+    cfg = SecretConfig(
+        name="sp1", app_id="app-0001", keyvault_id=KV_ID,
+        keyvault_secret_name="sp1-secret", threshold_days=20,
+    )
+
+    result = rotator.rotate(cfg)
+    assert result.rotated is True
+
+
+def test_per_secret_threshold_suppresses_rotation():
+    """Secret with threshold_days=3 should skip a cred expiring in 5 days (global=7 would rotate)."""
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = [_cred(5)]  # within global 7-day threshold
+
+    rotator = _make_rotator(graph, MagicMock())
+    cfg = SecretConfig(
+        name="sp1", app_id="app-0001", keyvault_id=KV_ID,
+        keyvault_secret_name="sp1-secret", threshold_days=3,
+    )
+
+    result = rotator.rotate(cfg)
+    assert result.rotated is False
+    assert result.error is None
+
+
+def test_per_secret_validity_days_used_in_add_credential():
+    """add_password_credential should be called with per-secret validity_days."""
+    new_cred = MagicMock()
+    new_cred.key_id = "key-new"
+    new_cred.secret_text = "s"
+    new_cred.end_date_time = NOW + timedelta(days=180)
+
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = [_cred(-1)]
+    graph.add_password_credential.return_value = new_cred
+
+    rotator = _make_rotator(graph, MagicMock())
+    cfg = SecretConfig(
+        name="sp1", app_id="app-0001", keyvault_id=KV_ID,
+        keyvault_secret_name="sp1-secret", validity_days=180,
+    )
+
+    rotator.rotate(cfg)
+    graph.add_password_credential.assert_called_once_with(
+        app_id="app-0001",
+        display_name="rotated-by-srf",
+        validity_days=180,
+    )
+
+
+def test_per_secret_validity_validator_rejects_invalid():
+    """validity_days <= threshold_days on the same secret must raise."""
+    with pytest.raises(Exception, match="validity_days"):
+        SecretConfig(
+            name="sp1", app_id="app-0001", keyvault_id=KV_ID,
+            keyvault_secret_name="sp1-secret",
+            threshold_days=30, validity_days=30,
+        )
+
+
+def test_per_secret_only_threshold_no_validity_uses_global_validity():
+    """When only threshold_days is overridden, global validity_days is still used."""
+    new_cred = MagicMock()
+    new_cred.key_id = "key-new"
+    new_cred.secret_text = "s"
+    new_cred.end_date_time = NOW + timedelta(days=365)
+
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = [_cred(-1)]
+    graph.add_password_credential.return_value = new_cred
+
+    rotator = SecretRotator(
+        graph_client=graph,
+        keyvault_client_factory=lambda _: MagicMock(),
+        validity_days=270,
+    )
+    cfg = SecretConfig(
+        name="sp1", app_id="app-0001", keyvault_id=KV_ID,
+        keyvault_secret_name="sp1-secret", threshold_days=14,
+    )
+
+    rotator.rotate(cfg)
+    graph.add_password_credential.assert_called_once_with(
+        app_id="app-0001",
+        display_name="rotated-by-srf",
+        validity_days=270,
+    )
