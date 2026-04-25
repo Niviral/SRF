@@ -37,8 +37,8 @@ secrets:
     keyvault_id: /subscriptions/6801b1ff-7314-4480-8e4b-42f910440eb8/resourceGroups/slave1/providers/Microsoft.KeyVault/vaults/kv-slave1
     keyvault_secret_name: slave1-client-secret
     keyvault_secret_description: "Client secret for slave1 SP — managed by SRF rotation tool"
-    # threshold_days: 30   # override global threshold for this SP only
-    # validity_days: 180   # override global validity for this SP only
+    threshold_days: 0   # override global threshold for this SP only
+    validity_days: 180   # override global validity for this SP only
 
   - name: slave2
     app_id: 32e99f34-5731-4fa9-95ae-8115360b0701
