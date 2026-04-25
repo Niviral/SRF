@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import logging
 from typing import Optional
 
 from srf.config.models import SecretConfig
 from srf.graph.client import GraphClient
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -34,15 +37,19 @@ class OwnershipChecker:
                 effective_owners.append(uid)
 
         if not effective_owners:
+            logger.debug("[%s] no required_owners configured — skipping ownership check", secret_config.name)
             return OwnershipResult(name=secret_config.name, app_id=secret_config.app_id, checked=False)
 
+        logger.info("[%s] checking %d required owner(s)", secret_config.name, len(effective_owners))
         try:
             current_owners = self._graph.list_owners(secret_config.app_id)
             current_set = set(current_owners)
             already_present = [uid for uid in effective_owners if uid in current_set]
             missing = [uid for uid in effective_owners if uid not in current_set]
+            logger.debug("[%s] owners already_present=%d missing=%d", secret_config.name, len(already_present), len(missing))
 
             if self._dry_run:
+                logger.info("[%s] dry-run: would add %d owner(s): %s", secret_config.name, len(missing), missing)
                 return OwnershipResult(
                     name=secret_config.name,
                     app_id=secret_config.app_id,
@@ -54,8 +61,15 @@ class OwnershipChecker:
 
             added = []
             for user_id in missing:
+                logger.debug("[%s] adding owner user_id=%s", secret_config.name, user_id)
                 self._graph.add_owner(secret_config.app_id, user_id)
                 added.append(user_id)
+
+            if added:
+                logger.info("[%s] added %d owner(s): %s", secret_config.name, len(added), added)
+            else:
+                logger.info("[%s] all owners already present", secret_config.name)
+
             return OwnershipResult(
                 name=secret_config.name,
                 app_id=secret_config.app_id,
@@ -64,6 +78,7 @@ class OwnershipChecker:
                 owners_already_present=already_present,
             )
         except Exception as exc:
+            logger.error("[%s] ownership check failed: %s — check Azure logs for details", secret_config.name, type(exc).__name__)
             return OwnershipResult(
                 name=secret_config.name,
                 app_id=secret_config.app_id,
