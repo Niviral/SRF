@@ -250,10 +250,8 @@ def main() -> int:
     logger.info("Config loaded from %s — %d SP(s) configured", args.config, len(config.secrets))
 
     run_id_svc = RunIdService()
-    logger.info(
-        "run_id=%s origin=%s event=%s",
-        run_id_svc.run_id, run_id_svc.origin, run_id_svc.event,
-    )
+    print(f"Run ID: {run_id_svc.run_id}  origin={run_id_svc.origin}  event={run_id_svc.event}")
+    logger.debug("run_id=%s origin=%s event=%s", run_id_svc.run_id, run_id_svc.origin, run_id_svc.event)
 
     threshold = args.threshold_days if args.threshold_days is not None else config.main.threshold_days
     validity = args.validity_days if args.validity_days is not None else config.main.validity_days
