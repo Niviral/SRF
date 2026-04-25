@@ -1,4 +1,5 @@
 """Tests for GraphClient — all Azure SDK calls are monkeypatched."""
+
 from __future__ import annotations
 
 import asyncio
@@ -38,6 +39,7 @@ def _make_cred(key_id=KEY_ID):
 # list_password_credentials
 # ---------------------------------------------------------------------------
 
+
 def test_list_password_credentials(monkeypatch):
     cred1 = _make_cred("k1")
     cred2 = _make_cred("k2")
@@ -45,8 +47,12 @@ def test_list_password_credentials(monkeypatch):
 
     with patch("srf.graph.client.GraphServiceClient") as MockGraph:
         instance = MockGraph.return_value
-        instance.applications.get = AsyncMock(return_value=_make_apps_list([_make_app()]))
-        instance.applications.by_application_id.return_value.get = AsyncMock(return_value=app)
+        instance.applications.get = AsyncMock(
+            return_value=_make_apps_list([_make_app()])
+        )
+        instance.applications.by_application_id.return_value.get = AsyncMock(
+            return_value=app
+        )
 
         client = GraphClient(credential=MagicMock())
         result = client.list_password_credentials(APP_ID)
@@ -69,17 +75,24 @@ def test_list_password_credentials_no_app_raises(monkeypatch):
 # add_password_credential
 # ---------------------------------------------------------------------------
 
+
 def test_add_password_credential(monkeypatch):
     new_cred = _make_cred("new-key")
     new_cred.secret_text = "s3cr3t"
 
     with patch("srf.graph.client.GraphServiceClient") as MockGraph:
         instance = MockGraph.return_value
-        instance.applications.get = AsyncMock(return_value=_make_apps_list([_make_app()]))
-        instance.applications.by_application_id.return_value.add_password.post = AsyncMock(return_value=new_cred)
+        instance.applications.get = AsyncMock(
+            return_value=_make_apps_list([_make_app()])
+        )
+        instance.applications.by_application_id.return_value.add_password.post = (
+            AsyncMock(return_value=new_cred)
+        )
 
         client = GraphClient(credential=MagicMock())
-        result = client.add_password_credential(APP_ID, display_name="test", validity_days=30)
+        result = client.add_password_credential(
+            APP_ID, display_name="test", validity_days=30
+        )
 
     assert result.key_id == "new-key"
     assert result.secret_text == "s3cr3t"
@@ -89,12 +102,17 @@ def test_add_password_credential(monkeypatch):
 # remove_password_credential
 # ---------------------------------------------------------------------------
 
+
 def test_remove_password_credential(monkeypatch):
     with patch("srf.graph.client.GraphServiceClient") as MockGraph:
         instance = MockGraph.return_value
-        instance.applications.get = AsyncMock(return_value=_make_apps_list([_make_app()]))
+        instance.applications.get = AsyncMock(
+            return_value=_make_apps_list([_make_app()])
+        )
         remove_mock = AsyncMock(return_value=None)
-        instance.applications.by_application_id.return_value.remove_password.post = remove_mock
+        instance.applications.by_application_id.return_value.remove_password.post = (
+            remove_mock
+        )
 
         client = GraphClient(credential=MagicMock())
         client.remove_password_credential(APP_ID, KEY_ID)
@@ -103,8 +121,62 @@ def test_remove_password_credential(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# test_object_id_used_directly
+# ---------------------------------------------------------------------------
+
+
+def test_object_id_used_directly(monkeypatch):
+    # Build a fake app where .app_id is the correct client ID
+    correct_app = _make_app(obj_id=OBJ_ID, app_id=APP_ID)
+
+    with patch("srf.graph.client.GraphServiceClient") as MockGraph:
+        instance = MockGraph.return_value
+
+        # First call  → appId filter → returns empty  (wrong GUID type)
+        # Second call → id filter    → returns a match (it IS the object ID)
+        instance.applications.get = AsyncMock(
+            side_effect=[
+                _make_apps_list([]),  # 1st call: appId eq → no match
+                _make_apps_list([correct_app]),  # 2nd call: appId < = > objID   → match
+            ]
+        )
+        instance.applications.by_application_id.return_value.get = AsyncMock(
+            return_value=correct_app
+        )
+
+        client = GraphClient(credential=MagicMock())
+        result = client.list_password_credentials(OBJ_ID)
+
+    assert result == []
+
+
+# ---------------------------------------------------------------------------
+# test_object_id_not_found
+# ---------------------------------------------------------------------------
+
+
+def test_object_id_not_found(monkeypatch):
+
+    with patch("srf.graph.client.GraphServiceClient") as MockGraph:
+        instance = MockGraph.return_value
+
+        # Both lookups return empty
+        instance.applications.get = AsyncMock(
+            side_effect=[
+                _make_apps_list([]),  # 1st call: appId eq → no match
+                _make_apps_list([]),  # 2nd call  objID eq → no match
+            ]
+        )
+
+        client = GraphClient(credential=MagicMock())
+        with pytest.raises(ValueError, match="not found"):
+            client.list_password_credentials("unknow-guid")
+
+
+# ---------------------------------------------------------------------------
 # list_owners
 # ---------------------------------------------------------------------------
+
 
 def _make_dir_obj(obj_id, odata_type):
     obj = MagicMock()
@@ -126,7 +198,9 @@ def test_list_owners_returns_user_ids():
 
     with patch("srf.graph.client.GraphServiceClient") as MockGraph:
         instance = MockGraph.return_value
-        instance.applications.get = AsyncMock(return_value=_make_apps_list([_make_app()]))
+        instance.applications.get = AsyncMock(
+            return_value=_make_apps_list([_make_app()])
+        )
         instance.applications.by_application_id.return_value.owners.get = AsyncMock(
             return_value=_make_owners_result([user1, user2, sp])
         )
@@ -140,7 +214,9 @@ def test_list_owners_returns_user_ids():
 def test_list_owners_empty():
     with patch("srf.graph.client.GraphServiceClient") as MockGraph:
         instance = MockGraph.return_value
-        instance.applications.get = AsyncMock(return_value=_make_apps_list([_make_app()]))
+        instance.applications.get = AsyncMock(
+            return_value=_make_apps_list([_make_app()])
+        )
         instance.applications.by_application_id.return_value.owners.get = AsyncMock(
             return_value=_make_owners_result([])
         )
@@ -155,6 +231,7 @@ def test_list_owners_empty():
 # add_owner
 # ---------------------------------------------------------------------------
 
+
 def test_add_owner_calls_ref_post():
     from msgraph.generated.models.reference_create import ReferenceCreate
 
@@ -162,9 +239,13 @@ def test_add_owner_calls_ref_post():
 
     with patch("srf.graph.client.GraphServiceClient") as MockGraph:
         instance = MockGraph.return_value
-        instance.applications.get = AsyncMock(return_value=_make_apps_list([_make_app()]))
+        instance.applications.get = AsyncMock(
+            return_value=_make_apps_list([_make_app()])
+        )
         ref_post_mock = AsyncMock(return_value=None)
-        instance.applications.by_application_id.return_value.owners.ref.post = ref_post_mock
+        instance.applications.by_application_id.return_value.owners.ref.post = (
+            ref_post_mock
+        )
 
         client = GraphClient(credential=MagicMock())
         client.add_owner(APP_ID, user_oid)
@@ -172,12 +253,15 @@ def test_add_owner_calls_ref_post():
     ref_post_mock.assert_awaited_once()
     body = ref_post_mock.call_args[0][0]
     assert isinstance(body, ReferenceCreate)
-    assert body.odata_id == f"https://graph.microsoft.com/v1.0/directoryObjects/{user_oid}"
+    assert (
+        body.odata_id == f"https://graph.microsoft.com/v1.0/directoryObjects/{user_oid}"
+    )
 
 
 # ---------------------------------------------------------------------------
 # objectId cache
 # ---------------------------------------------------------------------------
+
 
 def test_object_id_cached_after_first_call():
     """Second call for the same app_id must not hit the Graph API again."""
@@ -185,7 +269,9 @@ def test_object_id_cached_after_first_call():
         instance = MockGraph.return_value
         app = _make_app()
         instance.applications.get = AsyncMock(return_value=_make_apps_list([app]))
-        instance.applications.by_application_id.return_value.get = AsyncMock(return_value=app)
+        instance.applications.by_application_id.return_value.get = AsyncMock(
+            return_value=app
+        )
 
         client = GraphClient(credential=MagicMock())
         client.list_password_credentials(APP_ID)

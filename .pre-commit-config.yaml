@@ -9,7 +9,7 @@ repos:
         always_run: true
       - id: pytest
         name: pytest e2e-test
-        entry: poetry run pytest tests/ -v -W ignore::DeprecationWarning --tb=short --ignore=tests/test_e2e.py
+        entry: poetry run pytest tests/test_e2e.py -v -W ignore::DeprecationWarning --tb=short 
         language: system
         pass_filenames: false
         always_run: true
