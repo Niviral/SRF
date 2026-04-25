@@ -3,12 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+import logging
 
 from msgraph.generated.models.password_credential import PasswordCredential
 
 from srf.config.models import SecretConfig
 from srf.graph.client import GraphClient
 from srf.keyvault.client import KeyVaultClient, parse_keyvault_uri
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -96,12 +99,22 @@ class SecretRotator:
             if secret_config.validity_days is not None
             else self._validity_days
         )
+        logger.info(
+            "processing [%s] app_id=%s vault=%s threshold_days=%s validity_days=%s dry_run=%s",
+            secret_config.name, secret_config.app_id, vault_name,
+            int(eff_threshold.days), eff_validity, self._dry_run,
+        )
         try:
             credentials = self._graph.list_password_credentials(secret_config.app_id)
             was_created = len(credentials) == 0
             should_rotate, current_expiry = self.needs_rotation(credentials, threshold=eff_threshold)
+            logger.debug(
+                "[%s] credentials=%d should_rotate=%s current_expiry=%s",
+                secret_config.name, len(credentials), should_rotate, current_expiry,
+            )
 
             if not should_rotate:
+                logger.info("[%s] skipping — not expiring within threshold", secret_config.name)
                 if self._dry_run:
                     return RotationResult(
                         name=secret_config.name,
@@ -121,6 +134,7 @@ class SecretRotator:
                 )
 
             if self._dry_run:
+                logger.info("[%s] dry-run: would rotate (was_created=%s)", secret_config.name, was_created)
                 return RotationResult(
                     name=secret_config.name,
                     app_id=secret_config.app_id,
@@ -132,12 +146,14 @@ class SecretRotator:
                     keyvault_name=vault_name,
                 )
 
+            logger.info("[%s] rotating secret (was_created=%s)", secret_config.name, was_created)
             new_cred = self._graph.add_password_credential(
                 app_id=secret_config.app_id,
                 display_name=f"rotated-by-srf",
                 validity_days=eff_validity,
             )
 
+            logger.debug("[%s] writing new secret to Key Vault", secret_config.name)
             kv = self._kv_factory(secret_config.keyvault_id)
             kv.set_secret(
                 name=secret_config.keyvault_secret_name,
@@ -148,6 +164,7 @@ class SecretRotator:
             cleanup_warnings: list[str] = []
             for old_cred in credentials:
                 if old_cred.key_id and old_cred.key_id != new_cred.key_id:
+                    logger.debug("[%s] removing old credential key_id=%s", secret_config.name, old_cred.key_id)
                     try:
                         self._graph.remove_password_credential(
                             app_id=secret_config.app_id,
@@ -158,7 +175,9 @@ class SecretRotator:
                             f"Failed to remove old credential {old_cred.key_id}: "
                             f"{type(exc).__name__}"
                         )
+                        logger.warning("[%s] cleanup failed for key_id=%s: %s", secret_config.name, old_cred.key_id, type(exc).__name__)
 
+            logger.info("[%s] rotation complete new_expiry=%s", secret_config.name, new_cred.end_date_time)
             return RotationResult(
                 name=secret_config.name,
                 app_id=secret_config.app_id,
@@ -174,6 +193,7 @@ class SecretRotator:
             # Use only the exception type — never str(exc) for operations that
             # handle secrets. Azure SDK exceptions can embed request bodies,
             # tokens, or the new secret value in their message text.
+            logger.error("[%s] rotation failed: %s — check Azure logs for details", secret_config.name, type(exc).__name__)
             return RotationResult(
                 name=secret_config.name,
                 app_id=secret_config.app_id,
