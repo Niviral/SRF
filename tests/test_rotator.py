@@ -85,9 +85,75 @@ def test_needs_rotation_returns_soonest_expiry():
     assert abs((soonest - expected).total_seconds()) < 2
 
 
-# ---------------------------------------------------------------------------
-# rotate — no rotation needed
-# ---------------------------------------------------------------------------
+def test_needs_rotation_zero_threshold_always_true():
+    """threshold_days=0 forces rotation regardless of expiry."""
+    rotator = _make_rotator(MagicMock(), MagicMock())
+    result, _ = rotator.needs_rotation([_cred(365)], threshold=timedelta(0))
+    assert result is True
+
+
+def test_needs_rotation_zero_threshold_returns_soonest_expiry():
+    rotator = _make_rotator(MagicMock(), MagicMock())
+    creds = [_cred(90), _cred(30), _cred(180)]
+    _, soonest = rotator.needs_rotation(creds, threshold=timedelta(0))
+    expected = NOW + timedelta(days=30)
+    assert abs((soonest - expected).total_seconds()) < 2
+
+
+def test_rotate_forced_when_per_secret_threshold_is_zero():
+    """A per-secret threshold_days=0 should trigger rotation every run."""
+    new_cred = MagicMock()
+    new_cred.key_id = "key-new"
+    new_cred.secret_text = "s"
+    new_cred.end_date_time = NOW + timedelta(days=365)
+
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = [_cred(30)]  # not normally expiring
+    graph.add_password_credential.return_value = new_cred
+
+    kv = MagicMock()
+    kv.secret_exists.return_value = True
+
+    cfg = SecretConfig(
+        name="sp1",
+        app_id="app-0001",
+        keyvault_id=KV_ID,
+        keyvault_secret_name="sp1-secret",
+        threshold_days=0,
+        validity_days=90,
+    )
+    rotator = _make_rotator(graph, kv)
+    result = rotator.rotate(cfg)
+
+    assert result.rotated is True
+    kv.set_secret.assert_called_once()
+
+
+def test_rotate_forced_when_global_threshold_is_zero():
+    """A global threshold_days=0 should trigger rotation every run."""
+    new_cred = MagicMock()
+    new_cred.key_id = "key-new"
+    new_cred.secret_text = "s"
+    new_cred.end_date_time = NOW + timedelta(days=365)
+
+    graph = MagicMock()
+    graph.list_password_credentials.return_value = [_cred(30)]
+    graph.add_password_credential.return_value = new_cred
+
+    kv = MagicMock()
+    kv.secret_exists.return_value = True
+
+    rotator = SecretRotator(
+        graph_client=graph,
+        keyvault_client_factory=lambda _: kv,
+        threshold_days=0,
+    )
+    result = rotator.rotate(_make_secret_cfg())
+
+    assert result.rotated is True
+    kv.set_secret.assert_called_once()
+
+
 
 def test_rotate_skipped_when_not_expiring():
     graph = MagicMock()
