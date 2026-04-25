@@ -9,7 +9,7 @@
       "installUsingPython": true
     }
   },
-  "postCreateCommand": "poetry install --no-interaction --with dev,codespace",
+  "postCreateCommand": "poetry install --no-interaction --with dev",
   "customizations": {
     "vscode": {
       "extensions": [
