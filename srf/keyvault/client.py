@@ -56,7 +56,7 @@ class KeyVaultClient:
         name: str,
         value: str,
         description: str | None = None,
-        expires_on: datetime | None = None,
+        expires_on: datetime.datetime | None = None,
     ) -> None:
         logger.debug("set_secret vault=%s name=%s", self._vault_name, name)
         self._client.set_secret(

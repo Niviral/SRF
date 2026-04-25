@@ -1,4 +1,5 @@
 """Tests for KeyVaultClient and parse_keyvault_uri."""
+
 from __future__ import annotations
 
 import pytest
@@ -9,6 +10,7 @@ from srf.keyvault.client import KeyVaultClient, parse_keyvault_uri
 # ---------------------------------------------------------------------------
 # parse_keyvault_uri
 # ---------------------------------------------------------------------------
+
 
 def test_parse_keyvault_uri_standard():
     rid = "/subscriptions/sub-id/resourceGroups/my-rg/providers/Microsoft.KeyVault/vaults/my-vault"
@@ -29,7 +31,9 @@ def test_parse_keyvault_uri_invalid_raises():
 # KeyVaultClient
 # ---------------------------------------------------------------------------
 
-KV_ID = "/subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/test-vault"
+KV_ID = (
+    "/subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/test-vault"
+)
 
 
 def test_get_secret(monkeypatch):
@@ -57,10 +61,11 @@ def test_set_secret_without_description(monkeypatch):
         def __init__(self, vault_url, credential):
             pass
 
-        def set_secret(self, name, value, content_type=None):
+        def set_secret(self, name, value, content_type=None, expires_on=None):
             calls["name"] = name
             calls["value"] = value
             calls["content_type"] = content_type
+            calls["expires_on"] = expires_on
 
     monkeypatch.setattr("srf.keyvault.client.SecretClient", FakeSecretClient)
     client = KeyVaultClient(credential=object(), keyvault_id=KV_ID)
@@ -69,6 +74,7 @@ def test_set_secret_without_description(monkeypatch):
     assert calls["name"] == "my-key"
     assert calls["value"] == "my-value"
     assert calls["content_type"] is None
+    assert calls["expires_on"] is None
 
 
 def test_set_secret_with_description(monkeypatch):
@@ -78,8 +84,9 @@ def test_set_secret_with_description(monkeypatch):
         def __init__(self, vault_url, credential):
             pass
 
-        def set_secret(self, name, value, content_type=None):
+        def set_secret(self, name, value, content_type=None, expires_on=None):
             calls["content_type"] = content_type
+            calls["expires_on"] = expires_on
 
     monkeypatch.setattr("srf.keyvault.client.SecretClient", FakeSecretClient)
     client = KeyVaultClient(credential=object(), keyvault_id=KV_ID)

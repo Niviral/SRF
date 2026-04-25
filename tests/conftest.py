@@ -20,6 +20,11 @@ SP_KV_ID = (
 
 
 @pytest.fixture
+def run_id_svc():
+    return "run-id-svc-0001"
+
+
+@pytest.fixture
 def main_config():
     return MainConfig(
         tenant_id=TENANT_ID,

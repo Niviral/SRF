@@ -249,7 +249,8 @@ def test_rotate_performs_rotation():
     kv.set_secret.assert_called_once_with(
         name="sp1-secret",
         value="new-secret-value",
-        description="desc",
+        description="desc - None",
+        expires_on=new_cred.end_date_time,
     )
     graph.remove_password_credential.assert_called_once_with(
         app_id="app-0001",
