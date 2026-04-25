@@ -1,4 +1,5 @@
 """Tests for ParallelRunner — concurrency and error isolation."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -19,12 +20,17 @@ def _cfg(name, app_id):
         name=name,
         app_id=app_id,
         keyvault_id=KV_ID,
-        keyvault_secret_name=f"{name}-secret",
+        secret_name=f"{name}-secret",
     )
 
 
 def _ok_result(cfg: SecretConfig) -> RotationResult:
-    return RotationResult(name=cfg.name, app_id=cfg.app_id, rotated=True, new_expiry=NOW + timedelta(days=365))
+    return RotationResult(
+        name=cfg.name,
+        app_id=cfg.app_id,
+        rotated=True,
+        new_expiry=NOW + timedelta(days=365),
+    )
 
 
 def test_runner_returns_all_results():
@@ -71,6 +77,7 @@ def test_runner_continues_after_one_failure():
 def test_runner_respects_max_workers(monkeypatch):
     """Verify ThreadPoolExecutor is initialised with the configured max_workers."""
     import concurrent.futures as cf
+
     captured = {}
 
     original_init = cf.ThreadPoolExecutor.__init__
@@ -113,7 +120,9 @@ def test_runner_ownership_results():
         OwnershipResult(name="sp2", app_id="a2", checked=False),
     ]
 
-    runner = ParallelRunner(rotator=rotator, ownership_checker=ownership_checker, max_workers=2)
+    runner = ParallelRunner(
+        rotator=rotator, ownership_checker=ownership_checker, max_workers=2
+    )
     rotation_results, ownership_results = runner.run(secrets)
 
     assert len(rotation_results) == 2
@@ -121,4 +130,3 @@ def test_runner_ownership_results():
     assert all(r.rotated for r in rotation_results)
     ownership_names = {r.name for r in ownership_results}
     assert ownership_names == {"sp1", "sp2"}
-

@@ -41,6 +41,7 @@ class SecretRotator:
         self,
         graph_client: GraphClient,
         keyvault_client_factory,
+        secret_name: Optional[str] = "Default Secret",
         threshold_days: int = 7,
         validity_days: int = 365,
         dry_run: bool = False,
@@ -55,19 +56,24 @@ class SecretRotator:
             validity_days: Validity period for newly created credentials.
             dry_run: If True, no writes are made; results reflect what would happen.
             run_id: UUID v8 run identifier used as the Azure AD credential display_name
-                prefix (``srf-<first_13_chars>``). When omitted, falls back to the
-                static string ``"rotated-by-srf"``.
+                prefix (``{secret_name}-<first_13_chars>``). When omitted, falls back to the
+                static string ``"{secret_name}"``.
         """
         self._graph = graph_client
         self._kv_factory = keyvault_client_factory
         self._threshold = timedelta(days=threshold_days)
         self._validity_days = validity_days
         self._dry_run = dry_run
-        self._display_name = f"srf-{run_id[:13]}" if run_id else "rotated-by-srf"
+        self._display_name = f"{secret_name}-{run_id}" if run_id else secret_name
+        self._run_id = run_id
 
     # ------------------------------------------------------------------
 
-    def needs_rotation(self, credentials: list[PasswordCredential], threshold: Optional[timedelta] = None) -> tuple[bool, Optional[datetime]]:
+    def needs_rotation(
+        self,
+        credentials: list[PasswordCredential],
+        threshold: Optional[timedelta] = None,
+    ) -> tuple[bool, Optional[datetime]]:
         """Return (needs_rotation, soonest_expiry) for the credential set.
 
         A threshold of zero is treated as "always rotate": rotation is forced
@@ -80,11 +86,19 @@ class SecretRotator:
         # threshold_days=0 means force rotation on every run
         if effective_threshold == timedelta(0):
             now = datetime.now(tz=timezone.utc)
-            soonest = min(
-                (c.end_date_time.replace(tzinfo=timezone.utc) if c.end_date_time and c.end_date_time.tzinfo is None else c.end_date_time)
-                for c in credentials
-                if c.end_date_time is not None
-            ) if any(c.end_date_time is not None for c in credentials) else None
+            soonest = (
+                min(
+                    (
+                        c.end_date_time.replace(tzinfo=timezone.utc)
+                        if c.end_date_time and c.end_date_time.tzinfo is None
+                        else c.end_date_time
+                    )
+                    for c in credentials
+                    if c.end_date_time is not None
+                )
+                if any(c.end_date_time is not None for c in credentials)
+                else None
+            )
             return True, soonest
 
         now = datetime.now(tz=timezone.utc)
@@ -121,31 +135,48 @@ class SecretRotator:
         )
         logger.info(
             "processing [%s] app_id=%s vault=%s threshold_days=%s validity_days=%s dry_run=%s",
-            secret_config.name, secret_config.app_id, vault_name,
-            int(eff_threshold.days), eff_validity, self._dry_run,
+            secret_config.name,
+            secret_config.app_id,
+            vault_name,
+            int(eff_threshold.days),
+            eff_validity,
+            self._dry_run,
         )
         try:
             credentials = self._graph.list_password_credentials(secret_config.app_id)
             was_created = len(credentials) == 0
-            should_rotate, current_expiry = self.needs_rotation(credentials, threshold=eff_threshold)
+            should_rotate, current_expiry = self.needs_rotation(
+                credentials, threshold=eff_threshold
+            )
             kv_secret_missing = False
             logger.debug(
                 "[%s] credentials=%d should_rotate=%s current_expiry=%s",
-                secret_config.name, len(credentials), should_rotate, current_expiry,
+                secret_config.name,
+                len(credentials),
+                should_rotate,
+                current_expiry,
             )
 
             if not should_rotate:
-                logger.debug("[%s] checking KV secret existence before skipping", secret_config.name)
+                logger.debug(
+                    "[%s] checking KV secret existence before skipping",
+                    secret_config.name,
+                )
                 kv = self._kv_factory(secret_config.keyvault_id)
-                if not kv.secret_exists(secret_config.keyvault_secret_name):
-                    logger.info("[%s] KV secret missing — forcing rotation despite valid SP credential", secret_config.name)
+                if not kv.secret_exists(secret_config.secret_name):
+                    logger.info(
+                        "[%s] KV secret missing — forcing rotation despite valid SP credential",
+                        secret_config.name,
+                    )
                     should_rotate = True
                     kv_secret_missing = True
                 else:
                     kv_secret_missing = False
 
             if not should_rotate:
-                logger.info("[%s] skipping — not expiring within threshold", secret_config.name)
+                logger.info(
+                    "[%s] skipping — not expiring within threshold", secret_config.name
+                )
                 if self._dry_run:
                     return RotationResult(
                         name=secret_config.name,
@@ -165,7 +196,12 @@ class SecretRotator:
                 )
 
             if self._dry_run:
-                logger.info("[%s] dry-run: would rotate (was_created=%s kv_secret_missing=%s)", secret_config.name, was_created, kv_secret_missing)
+                logger.info(
+                    "[%s] dry-run: would rotate (was_created=%s kv_secret_missing=%s)",
+                    secret_config.name,
+                    was_created,
+                    kv_secret_missing,
+                )
                 return RotationResult(
                     name=secret_config.name,
                     app_id=secret_config.app_id,
@@ -178,7 +214,12 @@ class SecretRotator:
                     kv_secret_missing=kv_secret_missing,
                 )
 
-            logger.info("[%s] rotating secret (was_created=%s kv_secret_missing=%s)", secret_config.name, was_created, kv_secret_missing)
+            logger.info(
+                "[%s] rotating secret (was_created=%s kv_secret_missing=%s)",
+                secret_config.name,
+                was_created,
+                kv_secret_missing,
+            )
             new_cred = self._graph.add_password_credential(
                 app_id=secret_config.app_id,
                 display_name=self._display_name,
@@ -188,15 +229,20 @@ class SecretRotator:
             logger.debug("[%s] writing new secret to Key Vault", secret_config.name)
             kv = self._kv_factory(secret_config.keyvault_id)
             kv.set_secret(
-                name=secret_config.keyvault_secret_name,
+                name=secret_config.secret_name,
                 value=new_cred.secret_text,  # type: ignore[arg-type]
-                description=secret_config.keyvault_secret_description,
+                description=f"{secret_config.keyvault_secret_description} - {self._run_id}",
+                expires_on=new_cred.end_date_time,
             )
 
             cleanup_warnings: list[str] = []
             for old_cred in credentials:
                 if old_cred.key_id and old_cred.key_id != new_cred.key_id:
-                    logger.debug("[%s] removing old credential key_id=%s", secret_config.name, old_cred.key_id)
+                    logger.debug(
+                        "[%s] removing old credential key_id=%s",
+                        secret_config.name,
+                        old_cred.key_id,
+                    )
                     try:
                         self._graph.remove_password_credential(
                             app_id=secret_config.app_id,
@@ -207,9 +253,18 @@ class SecretRotator:
                             f"Failed to remove old credential {old_cred.key_id}: "
                             f"{type(exc).__name__}"
                         )
-                        logger.warning("[%s] cleanup failed for key_id=%s: %s", secret_config.name, old_cred.key_id, type(exc).__name__)
+                        logger.warning(
+                            "[%s] cleanup failed for key_id=%s: %s",
+                            secret_config.name,
+                            old_cred.key_id,
+                            type(exc).__name__,
+                        )
 
-            logger.info("[%s] rotation complete new_expiry=%s", secret_config.name, new_cred.end_date_time)
+            logger.info(
+                "[%s] rotation complete new_expiry=%s",
+                secret_config.name,
+                new_cred.end_date_time,
+            )
             return RotationResult(
                 name=secret_config.name,
                 app_id=secret_config.app_id,
@@ -226,7 +281,11 @@ class SecretRotator:
             # Use only the exception type — never str(exc) for operations that
             # handle secrets. Azure SDK exceptions can embed request bodies,
             # tokens, or the new secret value in their message text.
-            logger.error("[%s] rotation failed: %s — check Azure logs for details", secret_config.name, type(exc).__name__)
+            logger.error(
+                "[%s] rotation failed: %s — check Azure logs for details",
+                secret_config.name,
+                type(exc).__name__,
+            )
             return RotationResult(
                 name=secret_config.name,
                 app_id=secret_config.app_id,

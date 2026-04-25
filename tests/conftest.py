@@ -1,4 +1,5 @@
 """Shared pytest fixtures."""
+
 from __future__ import annotations
 
 import pytest
@@ -8,10 +9,19 @@ from srf.config.models import AppConfig, MainConfig, MailConfig, SecretConfig
 
 TENANT_ID = "tenant-0000"
 MASTER_CLIENT_ID = "master-0001"
-MASTER_KV_ID = "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/master-kv"
+MASTER_KV_ID = (
+    "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/master-kv"
+)
 MASTER_KV_SECRET = "master-sp-client-secret"
 
-SP_KV_ID = "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/sp-kv"
+SP_KV_ID = (
+    "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/sp-kv"
+)
+
+
+@pytest.fixture
+def run_id_svc():
+    return "run-id-svc-0001"
 
 
 @pytest.fixture
@@ -20,7 +30,7 @@ def main_config():
         tenant_id=TENANT_ID,
         master_client_id=MASTER_CLIENT_ID,
         master_keyvault_id=MASTER_KV_ID,
-        master_keyvault_secret_name=MASTER_KV_SECRET,
+        master_secret_name=MASTER_KV_SECRET,
     )
 
 
@@ -43,7 +53,7 @@ def secret_config_with_description():
         name="slave1",
         app_id="app-0001",
         keyvault_id=SP_KV_ID,
-        keyvault_secret_name="slave1-secret",
+        secret_name="slave1-secret",
         keyvault_secret_description="My slave1 description",
     )
 
@@ -54,12 +64,17 @@ def secret_config_no_description():
         name="slave2",
         app_id="app-0002",
         keyvault_id=SP_KV_ID,
-        keyvault_secret_name="slave2-secret",
+        secret_name="slave2-secret",
     )
 
 
 @pytest.fixture
-def app_config(main_config, mail_config, secret_config_with_description, secret_config_no_description):
+def app_config(
+    main_config,
+    mail_config,
+    secret_config_with_description,
+    secret_config_no_description,
+):
     return AppConfig(
         main=main_config,
         mail=mail_config,

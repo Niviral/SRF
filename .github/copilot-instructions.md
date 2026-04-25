@@ -98,6 +98,7 @@ tests/
 - Commits: [Conventional Commits](https://www.conventionalcommits.org/) — `feat:`, `fix:`, `chore:`, `style:`, `test:`, `docs:`
 - One feature/fix per PR; all CI checks must be green before merging.
 - Target branch: `master`
+- Don't add copilot as Co-Author in commit messages — the commit history should reflect human authorship only.
 
 ---
 

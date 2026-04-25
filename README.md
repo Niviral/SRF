@@ -68,7 +68,7 @@ poetry install
 poetry run python main.py
 
 # Run tests
-poetry run pytest tests\ -v
+poetry run pytest tests -v
 ```
 
 ### Without Poetry (plain pip)
@@ -152,7 +152,7 @@ main:
   tenant_id: <your-tenant-id>
   master_client_id: <master-sp-client-id>
   master_keyvault_id: /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<kv>
-  master_keyvault_secret_name: master-sp-client-secret
+  master_secret_name: master-sp-client-secret
 ```
 
 ---
@@ -178,7 +178,7 @@ main:
   # ARM resource ID of the Key Vault holding the master SP's own client secret.
   # Omit both fields if using the SRF_MASTER_CLIENT_SECRET env var instead.
   master_keyvault_id: /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<kv-name>
-  master_keyvault_secret_name: master-sp-client-secret
+  master_secret_name: master-sp-client-secret
 
   # Rotation settings (can be overridden per-run with CLI flags)
   threshold_days: 7     # rotate if secret expires within this many days
@@ -206,7 +206,7 @@ secrets:
 
     # Key Vault where the rotated secret value will be stored
     keyvault_id: /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<kv-name>
-    keyvault_secret_name: my-service-sp-secret
+    secret_name: my-service-sp-secret
     keyvault_secret_description: "Managed by SRF"   # optional, stored as KV content_type
 
     # Users added as owner for THIS SP only (merged with master_owners)
@@ -223,7 +223,7 @@ secrets:
 | `tenant_id` | ✅ | — | Azure AD tenant ID |
 | `master_client_id` | ✅ | — | Client ID of the master SP |
 | `master_keyvault_id` | | `null` | ARM resource ID of the Key Vault holding the master SP secret (required if `SRF_MASTER_CLIENT_SECRET` is not set) |
-| `master_keyvault_secret_name` | | `null` | Secret name inside that Key Vault (required if `SRF_MASTER_CLIENT_SECRET` is not set) |
+| `master_secret_name` | | `null` | Secret name inside that Key Vault (required if `SRF_MASTER_CLIENT_SECRET` is not set) |
 | `threshold_days` | | `7` | Rotate if expiry is within this many days |
 | `validity_days` | | `365` | New secret validity in days |
 | `master_owners` | | `[]` | User object IDs added as owner to every SP |
@@ -235,7 +235,7 @@ secrets:
 | `name` | ✅ | — | Display name (used in reports) |
 | `app_id` | ✅ | — | SP application (client) ID |
 | `keyvault_id` | ✅ | — | ARM resource ID of the Key Vault to store the rotated secret |
-| `keyvault_secret_name` | ✅ | — | Secret name to create/overwrite in that Key Vault |
+| `secret_name` | ✅ | — | Secret name to create/overwrite in that Key Vault |
 | `keyvault_secret_description` | | `null` | Stored as `content_type` on the KV secret |
 | `required_owners` | | `[]` | User object IDs added as owner for this SP only |
 
