@@ -9,7 +9,7 @@
       "installUsingPython": true
     }
   },
-  "postCreateCommand": "poetry install --no-interaction --with dev",
+  "postCreateCommand": "poetry install --no-interaction --with dev && pipx install azure-cli",
   "customizations": {
     "vscode": {
       "extensions": [
