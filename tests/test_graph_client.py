@@ -279,3 +279,45 @@ def test_object_id_cached_after_first_call():
 
     # _get_object_id resolves via applications.get — it should only be called once
     assert instance.applications.get.call_count == 1
+
+
+# ---------------------------------------------------------------------------
+# get user by email
+# ---------------------------------------------------------------------------
+
+
+def _make_user(obj_id, mail):
+    obj = MagicMock()
+    obj.id = obj_id
+    obj.mail = mail
+    obj.userPrincipalName = mail
+    return obj
+
+
+def _make_user_list(*user):
+    result = MagicMock()
+    result.value = list(*user)
+    return result
+
+
+def test_get_user_email_found():
+    user1 = _make_user(obj_id="user-0001", mail="user1@email")
+    with patch("srf.graph.client.GraphServiceClient") as MockGraph:
+        instance = MockGraph.return_value
+        instance.users.get = AsyncMock(return_value=_make_user_list(user1))
+
+        user = GraphClient(credential=MagicMock())
+        result = user.get_user_by_email(user1.mail)
+
+        assert result == "user-0001"
+
+
+def test_get_user_email_not_found():
+    user1 = _make_user(obj_id="", mail="user2@email")
+    with patch("srf.graph.client.GraphServiceClient") as MockGraph:
+        instance = MockGraph.return_value
+        instance.users.get = AsyncMock(return_value=_make_user_list())
+
+        user = GraphClient(credential=MagicMock())
+        with pytest.raises(ValueError, match="not found"):
+            user.get_user_by_email("uknow-email")

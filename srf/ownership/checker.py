@@ -20,6 +20,7 @@ class OwnershipResult:
     error: Optional[str] = field(default=None)
     owners_would_add: list[str] = field(default_factory=list)
     dry_run: bool = field(default=False)
+    warning: Optional[str] = field(default=None)
 
 
 class OwnershipChecker:
@@ -33,19 +34,26 @@ class OwnershipChecker:
         self._master_owners = master_owners or []
         self._dry_run = dry_run
 
-    # def check_emails(self, secret_config: SecretConfig):
-    #     for uid in self._master_owners + secret_config.required_owners:
-    #         if "@" in uid:
-    #             try:
-    #                 grap_user = self._graph.users.by
+    def _is_email(self, owner: str):
+        if "@" in owner:
+            return True
+        else:
+            return False
 
     def check_and_update(self, secret_config: SecretConfig) -> OwnershipResult:
         seen = set()
         effective_owners = []
-        for uid in self._master_owners + secret_config.required_owners:
-            if uid not in seen:
-                seen.add(uid)
-                effective_owners.append(uid)
+        expected_owners = self._master_owners + secret_config.required_owners
+        for uid in expected_owners:
+            if self._is_email(uid):
+                email_uid = self._graph.get_user_by_email(uid)
+                if email_uid not in seen:
+                    seen.add(email_uid)
+                    effective_owners.append(email_uid)
+            else:
+                if uid not in seen:
+                    seen.add(uid)
+                    effective_owners.append(uid)
 
         if not effective_owners:
             logger.debug(

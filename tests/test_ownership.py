@@ -131,6 +131,31 @@ def test_skip_when_both_empty():
     graph.add_owner.assert_not_called()
 
 
+def test_add_missing_owner_by_email():
+    graph = MagicMock(spec=GraphClient)
+    graph.get_user_by_email.return_value = "u2"
+    graph.list_owners.return_value = []
+    checker = OwnershipChecker(graph_client=graph, master_owners=["u1"])
+    result = checker.check_and_update(_cfg(required_owners=["email@test"]))
+
+    assert result.checked is True
+    assert result.owners_added == ["u1", "u2"]
+    assert result.owners_already_present == []
+    assert graph.add_owner.call_count == 2
+
+
+def test_error_returns_error_result_by_email():
+    graph = MagicMock(spec=GraphClient)
+    graph.list_owners.side_effect = ValueError("graph down")
+    checker = OwnershipChecker(graph_client=graph)
+
+    result = checker.check_and_update(_cfg(required_owners=["email@test"]))
+
+    assert result.checked is True
+    assert result.error is not None
+    assert "PermissionError" in result.error
+
+
 # ---------------------------------------------------------------------------
 # dry-run
 # ---------------------------------------------------------------------------

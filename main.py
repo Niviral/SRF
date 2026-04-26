@@ -115,6 +115,7 @@ def _print_ownership_summary(ownership_results: list[OwnershipResult]) -> None:
     skipped = [r for r in ownership_results if not r.checked]
     added_any = [r for r in checked if r.owners_added]
     failed = [r for r in checked if r.error is not None]
+    warning = [r for r in checked if r.warning is not None]
 
     col = "{:<20} {:<38} {:<12} {}"
     header = col.format("NAME", "APP ID", "STATUS", "DETAIL")
@@ -152,6 +153,10 @@ def _print_ownership_summary(ownership_results: list[OwnershipResult]) -> None:
                 col.format(
                     r.name[:19], r.app_id, "✓ UPDATED", f"added={r.owners_added}"
                 )
+            )
+        elif r.warning:
+            print(
+                col.format(r.name[:19], r.app_id, "⚠ WARNING", (r.warning or "")[:60])
             )
         else:
             print(col.format(r.name[:19], r.app_id, "– OK", f"all owners present"))

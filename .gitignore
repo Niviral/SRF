@@ -13,7 +13,7 @@ build/
 venv/
 .venv/
 env/
-
+.env*
 # pytest / coverage
 .pytest_cache/
 .coverage

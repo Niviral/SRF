@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 from azure.core.credentials import TokenCredential
-from msgraph import GraphServiceClient
+from msgraph.graph_service_client import GraphServiceClient
 from msgraph.generated.applications.item.add_password.add_password_post_request_body import (
     AddPasswordPostRequestBody,
 )
@@ -14,7 +14,12 @@ from msgraph.generated.applications.item.remove_password.remove_password_post_re
 )
 from msgraph.generated.models.password_credential import PasswordCredential
 from msgraph.generated.models.reference_create import ReferenceCreate
-
+from msgraph.generated.models.o_data_errors.o_data_error import ODataError
+from kiota_abstractions.base_request_configuration import RequestConfiguration
+from msgraph.generated.applications.applications_request_builder import (
+    ApplicationsRequestBuilder,
+)
+from msgraph.generated.users.users_request_builder import UsersRequestBuilder
 
 _GRAPH_SCOPES = ["https://graph.microsoft.com/.default"]
 logger = logging.getLogger(__name__)
@@ -26,6 +31,7 @@ class GraphClient:
     def __init__(self, credential: TokenCredential) -> None:
         self._credential = credential
         self._object_id_cache: dict[str, str] = {}
+        self._email_resolution_disabled = False
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -56,12 +62,6 @@ class GraphClient:
         if app_id in self._object_id_cache:
             logger.debug("srf.graph.client: object_id cache hit for app_id=%s", app_id)
             return self._object_id_cache[app_id]
-
-        logger.debug("resolving object_id for app_id=%s via Graph API", app_id)
-        from msgraph.generated.applications.applications_request_builder import (
-            ApplicationsRequestBuilder,
-        )
-        from kiota_abstractions.base_request_configuration import RequestConfiguration
 
         logger.debug(
             "srf.graph.client: resolving object_id for app_id=%s via Graph API", app_id
@@ -109,6 +109,42 @@ class GraphClient:
             "srf.graph.client: resolved app_id=%s -> object_id=%s", app_id, obj_id
         )
         return obj_id
+
+    async def _get_email_obj_id(self, email: str, graph: GraphServiceClient) -> str:
+
+        if email in self._object_id_cache:
+            logger.debug("srf.graph.client: email cache hit for email=%s", email)
+            return self._object_id_cache[email]
+
+        logger.debug(
+            "srf.graph.client: resolving object_id for email=%s via Graph API", email
+        )
+        query_params = UsersRequestBuilder.UsersRequestBuilderGetQueryParameters(
+            filter=f"mail eq '{email}'or userPrincipalName eq '{email}'",
+            select=["id", "mail", "userPrincipalName"],
+        )
+        config = RequestConfiguration(query_parameters=query_params)
+        try:
+            result = await graph.users.get(request_configuration=config)
+        except ODataError as e:
+            if e.response_status_code == 403:
+                logger.error(
+                    "srf.graph.client: code:%s, message:%s",
+                    e.response_status_code,
+                    e.primary_message,
+                )
+                self._email_resolution_disabled = True
+                raise PermissionError
+        else:
+            emails = result.value if result and result.value else []
+            if not emails:
+                raise ValueError(f"Owner with email: {email} not found in directory")
+            obj_id: str = emails[0].id  # type: ignore[assigment]
+            self._object_id_cache[email] = obj_id
+            logger.debug(
+                "srf.graph.client: resolved email=%s -> object_id=%s", email, obj_id
+            )
+            return obj_id
 
     # ------------------------------------------------------------------
     # Public API
@@ -180,6 +216,15 @@ class GraphClient:
 
         self._run(_call)
 
-    # def get_user_properties_by_email(self, email: str) -> None:
-    #     async def _call(graph: GraphServiceClient):
-    #         user_properties = await self.
+    def get_user_by_email(self, email: str) -> str:
+        async def _call(graph: GraphServiceClient):
+            if not self._email_resolution_disabled:
+                user_obj_id = await self._get_email_obj_id(email, graph)
+                return user_obj_id
+            else:
+                logger.warning(
+                    "srf.graph.client: Email resolution disabled, operator missing not allowed to query `User.ReadBasic.All`"
+                )
+                raise PermissionError
+
+        return self._run(_call)

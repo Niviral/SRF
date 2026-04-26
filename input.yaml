@@ -17,6 +17,7 @@ main:
   validity_days: 365
   # cleanup_old_secrets: false  # Set to true to delete old SP credentials after rotation
   master_owners: # user object ID added to every SP
+    - Owner_3@marcinbieniashotmail.onmicrosoft.com
     - 1338bb98-3041-4ef6-840d-45454bf9945f
     - 4a0773b4-bddf-47e2-b1fd-8c847f9a6319   
 
