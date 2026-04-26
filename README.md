@@ -12,10 +12,7 @@ A Python CLI tool that automates rotation of Azure Service Principal (SP) client
 - **Owner verification** — ensures specified Azure AD users are owners of each SP application registration; adds any that are missing (never removes)
 - **Global master owners** — a single list of owners applied to *every* SP, merged with per-SP `required_owners`
 - **Email report** — sends an HTML + plain-text summary email after each run (optional)
-- **Parallel execution** — rotation and ownership checks run concurrently across all SPs
 - **Run ID tracing** — every run generates a UUID v8 run identifier printed to stdout and embedded in Azure AD credential names for traceability; decode with `main.py decode <run-id>`
-- **Composition-style design** — each component is injected as a dependency, making it easy to extend (e.g. add Service Connection rotation)
-
 ---
 
 ## Architecture
