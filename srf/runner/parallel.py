@@ -48,7 +48,7 @@ class ParallelRunner:
                         rotation_results.append(
                             RotationResult(
                                 name=secret.name,
-                                app_id=secret.app_id,
+                                obj_id=secret.obj_id,
                                 rotated=False,
                                 error=f"{type(exc).__name__}: unexpected runner error",
                             )
@@ -63,7 +63,7 @@ class ParallelRunner:
                         ownership_results.append(
                             OwnershipResult(
                                 name=secret.name,
-                                app_id=secret.app_id,
+                                obj_id=secret.obj_id,
                                 checked=True,
                                 error=f"{type(exc).__name__}: unexpected runner error",
                             )

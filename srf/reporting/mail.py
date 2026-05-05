@@ -54,7 +54,7 @@ class MailReporter:
         if rotated:
             for r in rotated:
                 lines.append(
-                    f"  {r.name} | app_id={r.app_id} | "
+                    f"  {r.name} | obj_id={r.obj_id} | "
                     f"new_expiry={_fmt_dt(r.new_expiry)} | "
                     f"vault={r.keyvault_name} | "
                     f"prev_expiry={_fmt_dt(r.current_expiry)}"
@@ -67,7 +67,7 @@ class MailReporter:
         if skipped:
             for r in skipped:
                 lines.append(
-                    f"  {r.name} | app_id={r.app_id} | "
+                    f"  {r.name} | obj_id={r.obj_id} | "
                     f"current_expiry={_fmt_dt(r.current_expiry)}"
                 )
         else:
@@ -77,7 +77,7 @@ class MailReporter:
         lines += [f"FAILED ({len(failed)})", "-" * 40]
         if failed:
             for r in failed:
-                lines.append(f"  {r.name} | app_id={r.app_id} | error={r.error}")
+                lines.append(f"  {r.name} | obj_id={r.obj_id} | error={r.error}")
         else:
             lines.append("  (none)")
 
@@ -96,7 +96,7 @@ class MailReporter:
         rotated_rows = rows(
             rotated,
             lambda r: (
-                f"<td>{r.name}</td><td>{r.app_id}</td>"
+                f"<td>{r.name}</td><td>{r.obj_id}</td>"
                 f"<td style='color:green'>{_fmt_dt(r.new_expiry)}</td>"
                 f"<td>{r.keyvault_name}</td>"
                 f"<td>{_fmt_dt(r.current_expiry)}</td>"
@@ -105,7 +105,7 @@ class MailReporter:
         skipped_rows = rows(
             skipped,
             lambda r: (
-                f"<td>{r.name}</td><td>{r.app_id}</td>"
+                f"<td>{r.name}</td><td>{r.obj_id}</td>"
                 f"<td>{_fmt_dt(r.current_expiry)}</td>"
                 f"<td colspan='2'>not expiring within threshold</td>"
             ),
@@ -113,7 +113,7 @@ class MailReporter:
         failed_rows = rows(
             failed,
             lambda r: (
-                f"<td>{r.name}</td><td>{r.app_id}</td>"
+                f"<td>{r.name}</td><td>{r.obj_id}</td>"
                 f"<td colspan='3' style='color:red'>{r.error}</td>"
             ),
         )

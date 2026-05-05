@@ -17,7 +17,7 @@ MINIMAL_YAML = textwrap.dedent("""\
       master_secret_name: sec
     secrets:
       - name: sp1
-        app_id: app-001
+        obj_id: app-001
         keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
         secret_name: sp1-secret
 """)
@@ -39,7 +39,7 @@ FULL_YAML = textwrap.dedent("""\
         - a@b.com
     secrets:
       - name: sp1
-        app_id: app-001
+        obj_id: app-001
         keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
         secret_name: sp1-secret
         keyvault_secret_description: "A description"
@@ -106,7 +106,7 @@ def test_threshold_validity_explicit(tmp_path):
           validity_days: 180
         secrets:
           - name: sp1
-            app_id: app-001
+            obj_id: app-001
             keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
             secret_name: sp1-secret
     """)
@@ -206,7 +206,7 @@ def test_master_owners_from_yaml(tmp_path):
             - 00000000-0000-0000-0000-000000000002
         secrets:
           - name: sp1
-            app_id: app-001
+            obj_id: app-001
             keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
             secret_name: sp1-secret
     """)
@@ -227,7 +227,7 @@ def test_per_secret_threshold_and_validity_days(tmp_path):
           tenant_id: tid
         secrets:
           - name: sp1
-            app_id: app-001
+            obj_id: app-001
             keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
             secret_name: sp1-secret
             threshold_days: 30
@@ -258,7 +258,7 @@ def test_per_secret_validity_must_exceed_threshold(tmp_path):
           tenant_id: tid
         secrets:
           - name: sp1
-            app_id: app-001
+            obj_id: app-001
             keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
             secret_name: sp1-secret
             threshold_days: 60
@@ -287,7 +287,7 @@ def test_cleanup_old_secrets_can_be_enabled(tmp_path):
           cleanup_old_secrets: true
         secrets:
           - name: sp1
-            app_id: app-001
+            obj_id: app-001
             keyvault_id: /subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/sp-kv
             secret_name: sp1-secret
     """)

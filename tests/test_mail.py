@@ -41,7 +41,7 @@ def _results():
     return [
         RotationResult(
             name="sp-rotated",
-            app_id="app-r",
+            obj_id="app-r",
             rotated=True,
             new_expiry=NOW + timedelta(days=365),
             current_expiry=NOW + timedelta(days=3),
@@ -49,14 +49,14 @@ def _results():
         ),
         RotationResult(
             name="sp-skipped",
-            app_id="app-s",
+            obj_id="app-s",
             rotated=False,
             current_expiry=NOW + timedelta(days=60),
             keyvault_name="sp-kv",
         ),
         RotationResult(
             name="sp-failed",
-            app_id="app-f",
+            obj_id="app-f",
             rotated=False,
             error="Graph API timeout",
             keyvault_name="sp-kv",

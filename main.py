@@ -53,7 +53,7 @@ def _print_summary(results: list[RotationResult], run_id: Optional[str] = None) 
         if r.kv_secret_missing:
             detail += " (kv-secret-missing)"
         print(
-            col.format(r.name[:19], r.app_id, "✓ ROTATED", _fmt(r.new_expiry), detail)
+            col.format(r.name[:19], r.obj_id, "✓ ROTATED", _fmt(r.new_expiry), detail)
         )
         for warning in r.cleanup_warnings:
             print(f"  ⚠ CLEANUP WARNING: {warning}")
@@ -61,7 +61,7 @@ def _print_summary(results: list[RotationResult], run_id: Optional[str] = None) 
         print(
             col.format(
                 r.name[:19],
-                r.app_id,
+                r.obj_id,
                 "– SKIPPED",
                 _fmt(r.current_expiry),
                 "not expiring soon",
@@ -77,14 +77,14 @@ def _print_summary(results: list[RotationResult], run_id: Optional[str] = None) 
             )
             print(
                 col.format(
-                    r.name[:19], r.app_id, f"~ {label}", _fmt(r.current_expiry), reason
+                    r.name[:19], r.obj_id, f"~ {label}", _fmt(r.current_expiry), reason
                 )
             )
         else:
             print(
                 col.format(
                     r.name[:19],
-                    r.app_id,
+                    r.obj_id,
                     "– NO CHANGE",
                     _fmt(r.current_expiry),
                     "not expiring soon (dry-run)",
@@ -94,7 +94,7 @@ def _print_summary(results: list[RotationResult], run_id: Optional[str] = None) 
         print(
             col.format(
                 r.name[:19],
-                r.app_id,
+                r.obj_id,
                 "✗ FAILED",
                 "",
                 (r.error or "")[:60],
@@ -129,7 +129,7 @@ def _print_ownership_summary(ownership_results: list[OwnershipResult]) -> None:
     for r in skipped:
         print(
             col.format(
-                r.name[:19], r.app_id, "SKIPPED", "no required_owners configured"
+                r.name[:19], r.obj_id, "SKIPPED", "no required_owners configured"
             )
         )
     for r in checked:
@@ -138,23 +138,23 @@ def _print_ownership_summary(ownership_results: list[OwnershipResult]) -> None:
                 print(
                     col.format(
                         r.name[:19],
-                        r.app_id,
+                        r.obj_id,
                         "~ WOULD UPDATE",
                         f"would_add={r.owners_would_add}",
                     )
                 )
             else:
-                print(col.format(r.name[:19], r.app_id, "– OK", "owners OK (dry-run)"))
+                print(col.format(r.name[:19], r.obj_id, "– OK", "owners OK (dry-run)"))
         elif r.error:
-            print(col.format(r.name[:19], r.app_id, "✗ FAILED", (r.error or "")[:60]))
+            print(col.format(r.name[:19], r.obj_id, "✗ FAILED", (r.error or "")[:60]))
         elif r.owners_added:
             print(
                 col.format(
-                    r.name[:19], r.app_id, "✓ UPDATED", f"added={r.owners_added}"
+                    r.name[:19], r.obj_id, "✓ UPDATED", f"added={r.owners_added}"
                 )
             )
         else:
-            print(col.format(r.name[:19], r.app_id, "– OK", f"all owners present"))
+            print(col.format(r.name[:19], r.obj_id, "– OK", f"all owners present"))
 
     print(sep)
     print(

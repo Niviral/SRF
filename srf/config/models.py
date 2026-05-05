@@ -40,7 +40,7 @@ class MailConfig(BaseModel):
 
 class SecretConfig(BaseModel):
     name: str
-    app_id: str
+    obj_id: str
     keyvault_id: str
     secret_name: str
     keyvault_secret_description: Optional[str] = Field(default=None)

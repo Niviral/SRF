@@ -86,7 +86,7 @@
             }
           ],
           "default": null,
-          "title": "Master Keyvault Secret Name"
+          "title": "Master Secret Name"
         },
         "threshold_days": {
           "default": 7,
@@ -130,8 +130,8 @@
           "title": "Name",
           "type": "string"
         },
-        "app_id": {
-          "title": "App Id",
+        "obj_id": {
+          "title": "Obj Id",
           "type": "string"
         },
         "keyvault_id": {
@@ -139,7 +139,7 @@
           "type": "string"
         },
         "secret_name": {
-          "title": "Keyvault Secret Name",
+          "title": "Secret Name",
           "type": "string"
         },
         "keyvault_secret_description": {
@@ -195,7 +195,7 @@
       },
       "required": [
         "name",
-        "app_id",
+        "obj_id",
         "keyvault_id",
         "secret_name"
       ],

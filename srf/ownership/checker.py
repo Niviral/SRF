@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class OwnershipResult:
     name: str
-    app_id: str
+    obj_id: str
     checked: bool  # False if required_owners was empty (skipped)
     owners_added: list[str] = field(default_factory=list)
     owners_already_present: list[str] = field(default_factory=list)
@@ -53,7 +53,7 @@ class OwnershipChecker:
                 secret_config.name,
             )
             return OwnershipResult(
-                name=secret_config.name, app_id=secret_config.app_id, checked=False
+                name=secret_config.name, obj_id=secret_config.obj_id, checked=False
             )
 
         logger.info(
@@ -62,7 +62,7 @@ class OwnershipChecker:
             len(effective_owners),
         )
         try:
-            current_owners = self._graph.list_owners(secret_config.app_id)
+            current_owners = self._graph.list_owners(secret_config.obj_id)
             current_set = set(current_owners)
             already_present = [uid for uid in effective_owners if uid in current_set]
             missing = [uid for uid in effective_owners if uid not in current_set]
@@ -82,7 +82,7 @@ class OwnershipChecker:
                 )
                 return OwnershipResult(
                     name=secret_config.name,
-                    app_id=secret_config.app_id,
+                    obj_id=secret_config.obj_id,
                     checked=True,
                     dry_run=True,
                     owners_already_present=already_present,
@@ -94,7 +94,7 @@ class OwnershipChecker:
                 logger.debug(
                     "[%s] adding owner user_id=%s", secret_config.name, user_id
                 )
-                self._graph.add_owner(secret_config.app_id, user_id)
+                self._graph.add_owner(secret_config.obj_id, user_id)
                 added.append(user_id)
 
             if added:
@@ -106,7 +106,7 @@ class OwnershipChecker:
 
             return OwnershipResult(
                 name=secret_config.name,
-                app_id=secret_config.app_id,
+                obj_id=secret_config.obj_id,
                 checked=True,
                 owners_added=added,
                 owners_already_present=already_present,
@@ -119,7 +119,7 @@ class OwnershipChecker:
             )
             return OwnershipResult(
                 name=secret_config.name,
-                app_id=secret_config.app_id,
+                obj_id=secret_config.obj_id,
                 checked=True,
                 error=f"{type(exc).__name__}: ownership check failed — check Azure logs for details",
             )

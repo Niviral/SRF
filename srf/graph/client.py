@@ -50,63 +50,73 @@ class GraphClient:
             finally:
                 loop.close()
 
-    async def _get_object_id(self, app_id: str, graph: GraphServiceClient) -> str:
-        """Resolve appId (client ID) to the application's object ID (cached)."""
+    async def _get_object_id(self, sp_id: str, graph: GraphServiceClient) -> str:
+        """Resolve a service-principal identifier to its application object ID (cached).
 
-        if app_id in self._object_id_cache:
-            logger.debug("srf.graph.client: object_id cache hit for app_id=%s", app_id)
-            return self._object_id_cache[app_id]
+        Resolution order:
+        1. Try ``id eq '{sp_id}'``  — caller already provided an object ID.
+        2. Fall back to ``appId eq '{sp_id}'`` — caller provided a client/app ID.
+        """
 
-        logger.debug("resolving object_id for app_id=%s via Graph API", app_id)
+        if sp_id in self._object_id_cache:
+            logger.debug("srf.graph.client: object_id cache hit for sp_id=%s", sp_id)
+            return self._object_id_cache[sp_id]
+
         from msgraph.generated.applications.applications_request_builder import (
             ApplicationsRequestBuilder,
         )
         from kiota_abstractions.base_request_configuration import RequestConfiguration
 
+        # --- Step 1: treat sp_id as an object ID ---
         logger.debug(
-            "srf.graph.client: resolving object_id for app_id=%s via Graph API", app_id
+            "srf.graph.client: resolving object_id for sp_id=%s via Graph API (obj_id first)",
+            sp_id,
         )
-        query_params = (
+        query_params_obj_id = (
             ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
-                filter=f"appId eq '{app_id}'",
+                filter=f"id eq '{sp_id}'", select=["id", "appId"]
+            )
+        )
+        config_obj_id = RequestConfiguration(query_parameters=query_params_obj_id)
+        result_obj_id = await graph.applications.get(
+            request_configuration=config_obj_id
+        )
+        apps_obj_id = (
+            result_obj_id.value if result_obj_id and result_obj_id.value else []
+        )
+        if apps_obj_id:
+            logger.debug(
+                "srf.graph.client: sp_id=%s is already an object_id, using directly",
+                sp_id,
+            )
+            self._object_id_cache[sp_id] = sp_id
+            return sp_id
+
+        # --- Step 2: fall back — treat sp_id as an app (client) ID ---
+        logger.debug(
+            "srf.graph.client: sp_id=%s not found as object_id, trying appId lookup",
+            sp_id,
+        )
+        query_params_app_id = (
+            ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
+                filter=f"appId eq '{sp_id}'",
                 select=["id", "appId"],
             )
         )
-        config = RequestConfiguration(query_parameters=query_params)
-        result = await graph.applications.get(request_configuration=config)
-        apps = result.value if result and result.value else []
+        config_app_id = RequestConfiguration(query_parameters=query_params_app_id)
+        result_app_id = await graph.applications.get(
+            request_configuration=config_app_id
+        )
+        apps = result_app_id.value if result_app_id and result_app_id.value else []
         if not apps:
-            logger.debug(
-                "srf.graph.client: resolving if provide value=%s is object_id via Graph API",
-                app_id,
+            raise ValueError(
+                f"Application with obj_id or app_id '{sp_id}' not found in the directory."
             )
-            query_params_obj_id = (
-                ApplicationsRequestBuilder.ApplicationsRequestBuilderGetQueryParameters(
-                    filter=f"id eq '{app_id}'", select=["id", "appId"]
-                )
-            )
-            config_obj_id = RequestConfiguration(query_parameters=query_params_obj_id)
-            result_obj_id = await graph.applications.get(
-                request_configuration=config_obj_id
-            )
-            apps_obj_id = (
-                result_obj_id.value if result_obj_id and result_obj_id.value else []
-            )
-            if apps_obj_id:
-                logger.debug(
-                    "srf.graph.client: value=%s is already an object_id, using directly",
-                    app_id,
-                )
-                self._object_id_cache[app_id] = app_id
-                return app_id
-            else:
-                raise ValueError(
-                    f"Application with appId or objID'{app_id}' not found in the directory."
-                )
+
         obj_id: str = apps[0].id  # type: ignore[assignment]
-        self._object_id_cache[app_id] = obj_id
+        self._object_id_cache[sp_id] = obj_id
         logger.debug(
-            "srf.graph.client: resolved app_id=%s -> object_id=%s", app_id, obj_id
+            "srf.graph.client: resolved app_id=%s -> object_id=%s", sp_id, obj_id
         )
         return obj_id
 
@@ -114,23 +124,23 @@ class GraphClient:
     # Public API
     # ------------------------------------------------------------------
 
-    def list_password_credentials(self, app_id: str) -> list[PasswordCredential]:
+    def list_password_credentials(self, sp_id: str) -> list[PasswordCredential]:
         logger.debug(
-            "srf.graph.client: listing password credentials for app_id=%s", app_id
+            "srf.graph.client: listing password credentials for sp_id=%s", sp_id
         )
 
         async def _call(graph: GraphServiceClient):
-            obj_id = await self._get_object_id(app_id, graph)
+            obj_id = await self._get_object_id(sp_id, graph)
             app = await graph.applications.by_application_id(obj_id).get()
             return app.password_credentials or []  # type: ignore[union-attr]
 
         return self._run(_call)
 
     def add_password_credential(
-        self, app_id: str, display_name: str, validity_days: int = 365
+        self, sp_id: str, display_name: str, validity_days: int = 365
     ) -> PasswordCredential:
         async def _call(graph: GraphServiceClient):
-            obj_id = await self._get_object_id(app_id, graph)
+            obj_id = await self._get_object_id(sp_id, graph)
             end_dt = datetime.now(tz=timezone.utc) + timedelta(days=validity_days)
             body = AddPasswordPostRequestBody()
             cred = PasswordCredential()
@@ -143,9 +153,9 @@ class GraphClient:
 
         return self._run(_call)
 
-    def remove_password_credential(self, app_id: str, key_id: str) -> None:
+    def remove_password_credential(self, sp_id: str, key_id: str) -> None:
         async def _call(graph: GraphServiceClient):
-            obj_id = await self._get_object_id(app_id, graph)
+            obj_id = await self._get_object_id(sp_id, graph)
             body = RemovePasswordPostRequestBody()
             body.key_id = key_id
             await graph.applications.by_application_id(obj_id).remove_password.post(
@@ -154,11 +164,11 @@ class GraphClient:
 
         self._run(_call)
 
-    def list_owners(self, app_id: str) -> list[str]:
-        logger.debug("srf.graph.client: listing owners for app_id=%s", app_id)
+    def list_owners(self, sp_id: str) -> list[str]:
+        logger.debug("srf.graph.client: listing owners for sp_id=%s", sp_id)
 
         async def _call(graph: GraphServiceClient):
-            obj_id = await self._get_object_id(app_id, graph)
+            obj_id = await self._get_object_id(sp_id, graph)
             result = await graph.applications.by_application_id(obj_id).owners.get()
             entries = result.value if result and result.value else []
             return [
@@ -169,9 +179,9 @@ class GraphClient:
 
         return self._run(_call)
 
-    def add_owner(self, app_id: str, user_object_id: str) -> None:
+    def add_owner(self, sp_id: str, user_object_id: str) -> None:
         async def _call(graph: GraphServiceClient):
-            obj_id = await self._get_object_id(app_id, graph)
+            obj_id = await self._get_object_id(sp_id, graph)
             body = ReferenceCreate()
             body.odata_id = (
                 f"https://graph.microsoft.com/v1.0/directoryObjects/{user_object_id}"

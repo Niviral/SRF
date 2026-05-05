@@ -126,18 +126,17 @@ def test_remove_password_credential(monkeypatch):
 
 
 def test_object_id_used_directly(monkeypatch):
-    # Build a fake app where .app_id is the correct client ID
+    # Build a fake app where .id is the correct object ID
     correct_app = _make_app(obj_id=OBJ_ID, app_id=APP_ID)
 
     with patch("srf.graph.client.GraphServiceClient") as MockGraph:
         instance = MockGraph.return_value
 
-        # First call  → appId filter → returns empty  (wrong GUID type)
-        # Second call → id filter    → returns a match (it IS the object ID)
+        # First call  → id filter    → returns a match (it IS the object ID)
+        # Second call never happens — resolution returns early
         instance.applications.get = AsyncMock(
             side_effect=[
-                _make_apps_list([]),  # 1st call: appId eq → no match
-                _make_apps_list([correct_app]),  # 2nd call: appId < = > objID   → match
+                _make_apps_list([correct_app]),  # 1st call: id eq → match
             ]
         )
         instance.applications.by_application_id.return_value.get = AsyncMock(
@@ -163,8 +162,8 @@ def test_object_id_not_found(monkeypatch):
         # Both lookups return empty
         instance.applications.get = AsyncMock(
             side_effect=[
-                _make_apps_list([]),  # 1st call: appId eq → no match
-                _make_apps_list([]),  # 2nd call  objID eq → no match
+                _make_apps_list([]),  # 1st call: id eq    → no match
+                _make_apps_list([]),  # 2nd call: appId eq → no match
             ]
         )
 
@@ -264,7 +263,7 @@ def test_add_owner_calls_ref_post():
 
 
 def test_object_id_cached_after_first_call():
-    """Second call for the same app_id must not hit the Graph API again."""
+    """Second call for the same sp_id must not hit the Graph API again."""
     with patch("srf.graph.client.GraphServiceClient") as MockGraph:
         instance = MockGraph.return_value
         app = _make_app()

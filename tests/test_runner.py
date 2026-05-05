@@ -15,10 +15,10 @@ KV_ID = "/subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/k
 NOW = datetime.now(tz=timezone.utc)
 
 
-def _cfg(name, app_id):
+def _cfg(name, obj_id):
     return SecretConfig(
         name=name,
-        app_id=app_id,
+        obj_id=obj_id,
         keyvault_id=KV_ID,
         secret_name=f"{name}-secret",
     )
@@ -27,7 +27,7 @@ def _cfg(name, app_id):
 def _ok_result(cfg: SecretConfig) -> RotationResult:
     return RotationResult(
         name=cfg.name,
-        app_id=cfg.app_id,
+        obj_id=cfg.obj_id,
         rotated=True,
         new_expiry=NOW + timedelta(days=365),
     )
@@ -116,8 +116,8 @@ def test_runner_ownership_results():
 
     ownership_checker = MagicMock(spec=OwnershipChecker)
     ownership_checker.check_and_update.side_effect = [
-        OwnershipResult(name="sp1", app_id="a1", checked=True, owners_added=["u1"]),
-        OwnershipResult(name="sp2", app_id="a2", checked=False),
+        OwnershipResult(name="sp1", obj_id="a1", checked=True, owners_added=["u1"]),
+        OwnershipResult(name="sp2", obj_id="a2", checked=False),
     ]
 
     runner = ParallelRunner(

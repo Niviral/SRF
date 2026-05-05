@@ -26,7 +26,7 @@ def _cred(days_from_now: int):
 def _make_secret_cfg(description=None) -> SecretConfig:
     return SecretConfig(
         name="sp1",
-        app_id="app-0001",
+        obj_id="app-0001",
         keyvault_id=KV_ID,
         secret_name="sp1-secret",
         keyvault_secret_description=description,
@@ -121,7 +121,7 @@ def test_rotate_forced_when_per_secret_threshold_is_zero():
 
     cfg = SecretConfig(
         name="sp1",
-        app_id="app-0001",
+        obj_id="app-0001",
         keyvault_id=KV_ID,
         secret_name="sp1-secret",
         threshold_days=0,
@@ -257,7 +257,7 @@ def test_rotate_performs_rotation():
         expires_on=new_cred.end_date_time,
     )
     graph.remove_password_credential.assert_called_once_with(
-        app_id="app-0001",
+        sp_id="app-0001",
         key_id="key-old",
     )
 
@@ -462,7 +462,7 @@ def test_per_secret_threshold_triggers_earlier_rotation():
     rotator = _make_rotator(graph, MagicMock())
     cfg = SecretConfig(
         name="sp1",
-        app_id="app-0001",
+        obj_id="app-0001",
         keyvault_id=KV_ID,
         secret_name="sp1-secret",
         threshold_days=20,
@@ -482,7 +482,7 @@ def test_per_secret_threshold_suppresses_rotation():
     rotator = _make_rotator(graph, MagicMock())
     cfg = SecretConfig(
         name="sp1",
-        app_id="app-0001",
+        obj_id="app-0001",
         keyvault_id=KV_ID,
         secret_name="sp1-secret",
         threshold_days=3,
@@ -507,7 +507,7 @@ def test_per_secret_validity_days_used_in_add_credential():
     rotator = _make_rotator(graph, MagicMock())
     cfg = SecretConfig(
         name="sp1",
-        app_id="app-0001",
+        obj_id="app-0001",
         keyvault_id=KV_ID,
         secret_name="sp1-secret",
         validity_days=180,
@@ -515,7 +515,7 @@ def test_per_secret_validity_days_used_in_add_credential():
 
     rotator.rotate(cfg)
     graph.add_password_credential.assert_called_once_with(
-        app_id="app-0001",
+        sp_id="app-0001",
         display_name="Default Secret",
         validity_days=180,
     )
@@ -526,7 +526,7 @@ def test_per_secret_validity_validator_rejects_invalid():
     with pytest.raises(Exception, match="validity_days"):
         SecretConfig(
             name="sp1",
-            app_id="app-0001",
+            obj_id="app-0001",
             keyvault_id=KV_ID,
             secret_name="sp1-secret",
             threshold_days=30,
@@ -552,7 +552,7 @@ def test_per_secret_only_threshold_no_validity_uses_global_validity():
     )
     cfg = SecretConfig(
         name="sp1",
-        app_id="app-0001",
+        obj_id="app-0001",
         keyvault_id=KV_ID,
         secret_name="sp1-secret",
         threshold_days=14,
@@ -560,7 +560,7 @@ def test_per_secret_only_threshold_no_validity_uses_global_validity():
 
     rotator.rotate(cfg)
     graph.add_password_credential.assert_called_once_with(
-        app_id="app-0001",
+        sp_id="app-0001",
         display_name="Default Secret",
         validity_days=180,
     )
@@ -616,6 +616,6 @@ def test_cleanup_enabled_removes_old_credentials():
 
     assert result.rotated is True
     graph.remove_password_credential.assert_called_once_with(
-        app_id="app-0001",
+        sp_id="app-0001",
         key_id="key-old",
     )

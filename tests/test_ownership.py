@@ -15,7 +15,7 @@ KV_ID = "/subscriptions/s/resourceGroups/r/providers/Microsoft.KeyVault/vaults/k
 def _cfg(required_owners=None):
     return SecretConfig(
         name="test-sp",
-        app_id="app-id",
+        obj_id="app-id",
         keyvault_id=KV_ID,
         secret_name="test-secret",
         required_owners=required_owners or [],

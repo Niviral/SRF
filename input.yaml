@@ -34,7 +34,7 @@ mail:
 
 secrets:
   - name: slave1
-    app_id: 6302d378-080d-4d83-b8eb-f894e6f75250
+    obj_id: 6302d378-080d-4d83-b8eb-f894e6f75250
     keyvault_id: /subscriptions/6801b1ff-7314-4480-8e4b-42f910440eb8/resourceGroups/slave1/providers/Microsoft.KeyVault/vaults/kv-slave1
     secret_name: slave1-client-secret
     keyvault_secret_description: "Client secret for slave1 SP — managed by SRF rotation tool"
@@ -42,7 +42,7 @@ secrets:
     validity_days: 180   # override global validity for this SP only
 
   - name: slave2
-    app_id: 32e99f34-5731-4fa9-95ae-8115360b0701
+    obj_id: 32e99f34-5731-4fa9-95ae-8115360b0701
     keyvault_id: /subscriptions/6801b1ff-7314-4480-8e4b-42f910440eb8/resourceGroups/slave2/providers/Microsoft.KeyVault/vaults/kv-slave2
     secret_name: slave2-client-secret
     # keyvault_secret_description is optional — omit to leave KV content_type blank

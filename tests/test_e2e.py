@@ -27,7 +27,7 @@ main:
   validity_days: 365
 secrets:
   - name: "sp-test"
-    app_id: "app-id-123"
+    obj_id: "app-id-123"
     keyvault_id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/myvault"
     secret_name: "sp-test-secret"
 """
@@ -41,7 +41,7 @@ main:
   validity_days: 365
 secrets:
   - name: "sp-test"
-    app_id: "app-id-123"
+    obj_id: "app-id-123"
     keyvault_id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/myvault"
     secret_name: "sp-test-secret"
 """
@@ -67,7 +67,7 @@ main:
   master_secret_name: "master-secret"
 secrets:
   - name: "sp-test"
-    app_id: "app-id-123"
+    obj_id: "app-id-123"
     keyvault_id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/myvault"
     secret_name: "sp-test-secret"
 """
@@ -132,7 +132,7 @@ def mock_azure(monkeypatch):
     )
     monkeypatch.setattr(
         "srf.graph.client.GraphClient.list_password_credentials",
-        lambda self, app_id: [mock_cred],
+        lambda self, sp_id: [mock_cred],
     )
     monkeypatch.setattr(
         "srf.graph.client.GraphClient.add_password_credential", add_password
@@ -143,7 +143,7 @@ def mock_azure(monkeypatch):
     )
     monkeypatch.setattr(
         "srf.graph.client.GraphClient.list_owners",
-        lambda self, app_id: [],
+        lambda self, sp_id: [],
     )
     monkeypatch.setattr(
         "srf.graph.client.GraphClient.add_owner",
@@ -284,9 +284,9 @@ def test_no_auth_source_uses_oidc_fallback(tmp_path, monkeypatch, capsys):
         patch("srf.graph.client.GraphClient.__init__", lambda self, *a, **kw: None),
         patch(
             "srf.graph.client.GraphClient.list_password_credentials",
-            lambda self, app_id: (_ for _ in ()).throw(RuntimeError("no token")),
+            lambda self, sp_id: (_ for _ in ()).throw(RuntimeError("no token")),
         ),
-        patch("srf.graph.client.GraphClient.list_owners", lambda self, app_id: []),
+        patch("srf.graph.client.GraphClient.list_owners", lambda self, sp_id: []),
     ):
         mock_dac.return_value = MagicMock()
         result = main.main()

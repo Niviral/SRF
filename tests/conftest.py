@@ -51,7 +51,7 @@ def mail_config():
 def secret_config_with_description():
     return SecretConfig(
         name="slave1",
-        app_id="app-0001",
+        obj_id="app-0001",
         keyvault_id=SP_KV_ID,
         secret_name="slave1-secret",
         keyvault_secret_description="My slave1 description",
@@ -62,7 +62,7 @@ def secret_config_with_description():
 def secret_config_no_description():
     return SecretConfig(
         name="slave2",
-        app_id="app-0002",
+        obj_id="app-0002",
         keyvault_id=SP_KV_ID,
         secret_name="slave2-secret",
     )
