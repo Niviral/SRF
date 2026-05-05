@@ -86,7 +86,7 @@
             }
           ],
           "default": null,
-          "title": "Master Secret Name"
+          "title": "Master Keyvault Secret Name"
         },
         "threshold_days": {
           "default": 7,
@@ -139,7 +139,7 @@
           "type": "string"
         },
         "secret_name": {
-          "title": "Secret Name",
+          "title": "Keyvault Secret Name",
           "type": "string"
         },
         "keyvault_secret_description": {
